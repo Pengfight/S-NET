@@ -61,9 +61,8 @@ def train(config):
 		for _ in tqdm(range(1, config.num_steps + 1)):
 			global_step = sess.run(model.global_step) + 1
 			if config.with_passage_ranking:
-				loss_esp, loss_pr, loss_ee, train_op, train_op_pr, train_op_ee = sess.run(
-					[model.loss, model.pr_loss, model.e_loss, 
-					model.train_op, model.train_op_pr, model.train_op_ee],
+				loss_esp, loss_pr, loss_ee, train_op_ee = sess.run(
+					[model.loss, model.pr_loss, model.e_loss, model.train_op_ee],
 					feed_dict={ handle: train_handle})
 			else:
 				loss_esp, train_op = sess.run([model.loss, model.train_op],
