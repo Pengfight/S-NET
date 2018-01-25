@@ -59,23 +59,11 @@ class Model(object):
 
 		if trainable:
 			self.lr = tf.get_variable(
-				"lr", shape=[], dtype=tf.float32, trainable=False)
+			"lr", shape=[], dtype=tf.float32, trainable=False)
 			self.opt = tf.train.AdadeltaOptimizer(
 				learning_rate=self.lr, epsilon=1e-6)
-			grads = self.opt.compute_gradients(self.loss)
-			gradients, variables = zip(*grads)
-			capped_grads, _ = tf.clip_by_global_norm(
-				gradients, config.grad_clip)
-			self.train_op = self.opt.apply_gradients(
-				zip(capped_grads, variables), global_step=self.global_step)
+
 			if config.with_passage_ranking:
-				##########################################
-				grads_pr = self.opt.compute_gradients(self.pr_loss)
-				gradients_pr, variables_pr = zip(*grads_pr)
-				capped_grads_pr, _ = tf.clip_by_global_norm(
-					gradients_pr, config.grad_clip)
-				self.train_op_pr = self.opt.apply_gradients(
-					zip(capped_grads_pr, variables_pr), global_step=self.global_step)
 				##########################################
 				grads_ee = self.opt.compute_gradients(self.e_loss)
 				gradients_ee, variables_ee = zip(*grads_ee)
@@ -83,6 +71,13 @@ class Model(object):
 					gradients_ee, config.grad_clip)
 				self.train_op_ee = self.opt.apply_gradients(
 					zip(capped_grads_ee, variables_ee), global_step=self.global_step)
+			else:
+				grads = self.opt.compute_gradients(self.loss)
+				gradients, variables = zip(*grads)
+				capped_grads, _ = tf.clip_by_global_norm(
+					gradients, config.grad_clip)
+				self.train_op = self.opt.apply_gradients(
+					zip(capped_grads, variables), global_step=self.global_step)
 	def ready(self):
 		config = self.config
 		N, PL, QL, CL, d, dc, dg = config.batch_size, self.c_maxlen, self.q_maxlen, config.char_limit, config.hidden, config.char_dim, config.char_hidden
@@ -105,6 +100,7 @@ class Model(object):
 					#print(self.ch_pr.get_shape())
 					#print(self.c.get_shape())
 					#print(self.c_pr.get_shape())
+					#self.ch_pr = tf.Print(self.ch_pr,[self.ch_pr[:,2:,:]],message="ch_pr")
 					ch_emb = tf.reshape(tf.nn.embedding_lookup(\
 						self.char_mat, self.ch_pr_), [N * PL, CL, dc])
 					#	self.char_mat, self.ch), [N * PL, CL, dc])
@@ -112,6 +108,8 @@ class Model(object):
 						self.char_mat, self.qh), [N * QL, CL, dc])
 					ch_emb = dropout(
 						ch_emb, keep_prob=config.keep_prob, is_train=self.is_train)
+					#ch_emb = tf.Print(ch_emb,[ch_emb],message="ch_emb")
+					#qh_emb = tf.Print(qh_emb,[qh_emb],message="qh_emb")
 					qh_emb = dropout(
 						qh_emb, keep_prob=config.keep_prob, is_train=self.is_train)
 					cell_fw = tf.contrib.rnn.GRUCell(dg)
@@ -121,10 +119,12 @@ class Model(object):
 					ch_emb = tf.concat([state_fw, state_bw], axis=1)
 					_, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(
 						cell_fw, cell_bw, qh_emb, self.qh_len, dtype=tf.float32)
+					#state_fw = tf.Print(state_fw,[state_fw],message="state_fw")
+					#state_bw = tf.Print(state_bw,[state_bw],message="state_bw")
 					qh_emb = tf.concat([state_fw, state_bw], axis=1)
 					qh_emb = tf.reshape(qh_emb, [N, QL, 2 * dg])
 					ch_emb = tf.reshape(ch_emb, [N, PL, 2 * dg])
-
+					#ch_emb = tf.Print(ch_emb,[ch_emb],message="ch_emb")
 				with tf.name_scope("word"+str(i)):
 					c_emb = tf.nn.embedding_lookup(self.word_mat, self.c_pr[:,i*400:(i+1)*400])
 					q_emb = tf.nn.embedding_lookup(self.word_mat, self.q)
@@ -149,7 +149,7 @@ class Model(object):
 					att_vP = att
 				else:
 					att_vP = tf.concat([att_vP, att], axis=1)
-				#att = tf.Print(att,[tf.shape(att)],message="att:")
+				#att = tf.Print(att,[att],message="att:")
 				print("att:",att.get_shape().as_list())
 				print("att_vP:",att_vP.get_shape().as_list())
 			#att_vP = tf.Print(att_vP,[tf.shape(att_vP)],message="att_vP:")
@@ -190,6 +190,7 @@ class Model(object):
 			#self.yp2 = tf.where(condition, tf.Print(self.yp2,[self.yp2],message="Yp2:"), self.yp1)
 		
 		if config.with_passage_ranking:
+			gi = None
 			for i in range(config.max_para):
 				# Passage ranking
 				with tf.variable_scope("passage-ranking-attention"+str(i)):
@@ -199,24 +200,34 @@ class Model(object):
 					pr_att = pr_attention(batch=N, hidden=init.get_shape().as_list(
 						)[-1], keep_prob=config.keep_prob, is_train=self.is_train)
 					r_P = pr_att(init, vj_P, d, self.c_mask)
-
+					#r_P = tf.Print(r_P,[r_P],message="r_p")
 					# Wg
 					concatenate = tf.concat([init,r_P],axis=1)
 					g = tf.nn.tanh(dense(concatenate, hidden=d, use_bias=False, scope="g"+str(i)))
 					g_ = dense(g, 1, use_bias=False, scope="g_"+str(i))
-					gi.append(g_)
-			gi_ = tf.convert_to_tensor(gi)
-			self.gi = tf.nn.softmax(gi_)
+					#g = tf.Print(g,[g],message="g")
+					if i==0:
+						gi = tf.reshape(g_,[N,1])
+					else:
+						gi = tf.concat([gi,tf.reshape(g_,[N,1])],axis=1)
+			#gi_ = tf.convert_to_tensor(gi,dtype=tf.float32)
+			#self.gi = tf.nn.softmax(gi_)
+			#self.losses3 = tf.nn.softmax_cross_entropy_with_logits(
+			#			logits=gi_, labels=tf.reshape(self.pr,[-1,1]))
 			self.losses3 = tf.nn.softmax_cross_entropy_with_logits(
-						logits=gi, labels=tf.reshape(self.pr,[-1,1]))
+						logits=gi, labels=self.pr)
+			self.losses3 = tf.Print(self.losses3,[self.losses3,tf.reduce_max(self.losses3),
+				tf.reduce_max(self.pr),tf.reduce_max(gi)],message="losses3:")
 			self.pr_loss = tf.reduce_mean(self.losses3)
 			#self.pr_loss = tf.Print(self.pr_loss,[self.pr_loss])
-			#assert(self.pr_loss.get_shape().as_list() == self.loss.get_shape().as_list())
-			self.r = tf.get_variable("r", [1])
+			self.r = tf.constant(0.8)
 			self.e_loss1 = tf.multiply(self.r,self.loss)
-			self.e_loss2 = tf.multiply(tf.subtract(tf.constant(1.0),self.r),self.loss)
+			self.e_loss2 = tf.multiply(tf.subtract(tf.constant(1.0),self.r),self.pr_loss)
 			self.e_loss = tf.add(self.e_loss1, self.e_loss2)
-
+			
+			self.loss= tf.Print(self.loss,[self.loss],message="ESP:")
+			self.pr_loss = tf.Print(self.pr_loss,[self.pr_loss],message="PR:")
+			self.e_loss = tf.Print(self.e_loss,[self.e_loss],message="EE:")
 	def print(self):
 		pass
 
