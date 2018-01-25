@@ -216,8 +216,8 @@ class Model(object):
 			#			logits=gi_, labels=tf.reshape(self.pr,[-1,1]))
 			self.losses3 = tf.nn.softmax_cross_entropy_with_logits(
 						logits=gi, labels=self.pr)
-			self.losses3 = tf.Print(self.losses3,[self.losses3,tf.reduce_max(self.losses3),
-				tf.reduce_max(self.pr),tf.reduce_max(gi)],message="losses3:")
+			#self.losses3 = tf.Print(self.losses3,[self.losses3,tf.reduce_max(self.losses3),
+			#	tf.reduce_max(self.pr),tf.reduce_max(gi)],message="losses3:")
 			self.pr_loss = tf.reduce_mean(self.losses3)
 			#self.pr_loss = tf.Print(self.pr_loss,[self.pr_loss])
 			self.r = tf.constant(0.8)
@@ -225,9 +225,9 @@ class Model(object):
 			self.e_loss2 = tf.multiply(tf.subtract(tf.constant(1.0),self.r),self.pr_loss)
 			self.e_loss = tf.add(self.e_loss1, self.e_loss2)
 			
-			self.loss= tf.Print(self.loss,[self.loss],message="ESP:")
-			self.pr_loss = tf.Print(self.pr_loss,[self.pr_loss],message="PR:")
-			self.e_loss = tf.Print(self.e_loss,[self.e_loss],message="EE:")
+			#self.loss= tf.Print(self.loss,[self.loss],message="ESP:")
+			#self.pr_loss = tf.Print(self.pr_loss,[self.pr_loss],message="PR:")
+			#self.e_loss = tf.Print(self.e_loss,[self.e_loss],message="EE:")
 	def print(self):
 		pass
 
