@@ -220,9 +220,9 @@ class Model(object):
 				tf.reduce_max(self.pr),tf.reduce_max(gi)],message="losses3:")
 			self.pr_loss = tf.reduce_mean(self.losses3)
 			#self.pr_loss = tf.Print(self.pr_loss,[self.pr_loss])
-			self.r = tf.get_variable("r", [1])
+			self.r = tf.constant(0.8)
 			self.e_loss1 = tf.multiply(self.r,self.loss)
-			self.e_loss2 = tf.multiply(tf.subtract(tf.constant(1.0),self.r),self.loss)
+			self.e_loss2 = tf.multiply(tf.subtract(tf.constant(1.0),self.r),self.pr_loss)
 			self.e_loss = tf.add(self.e_loss1, self.e_loss2)
 			
 			self.loss= tf.Print(self.loss,[self.loss],message="ESP:")
