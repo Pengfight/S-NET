@@ -207,9 +207,9 @@ class Model(object):
 					g_ = dense(g, 1, use_bias=False, scope="g_"+str(i))
 					#g = tf.Print(g,[g],message="g")
 					if i==0:
-						gi = tf.reshape(g_,[N,config.max_para])
+						gi = tf.reshape(g_,[N,1])
 					else:
-						gi = tf.concat([gi,tf.reshape(g_,[N,config.max_para])],axis=0)
+						gi = tf.concat([gi,tf.reshape(g_,[N,1])],axis=1)
 			#gi_ = tf.convert_to_tensor(gi,dtype=tf.float32)
 			#self.gi = tf.nn.softmax(gi_)
 			#self.losses3 = tf.nn.softmax_cross_entropy_with_logits(
