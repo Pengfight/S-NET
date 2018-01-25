@@ -100,7 +100,7 @@ class Model(object):
 					#print(self.ch_pr.get_shape())
 					#print(self.c.get_shape())
 					#print(self.c_pr.get_shape())
-					self.ch_pr = tf.Print(self.ch_pr,[self.ch_pr[:,2:,:]],message="ch_pr")
+					#self.ch_pr = tf.Print(self.ch_pr,[self.ch_pr[:,2:,:]],message="ch_pr")
 					ch_emb = tf.reshape(tf.nn.embedding_lookup(\
 						self.char_mat, self.ch_pr_), [N * PL, CL, dc])
 					#	self.char_mat, self.ch), [N * PL, CL, dc])
@@ -108,8 +108,8 @@ class Model(object):
 						self.char_mat, self.qh), [N * QL, CL, dc])
 					ch_emb = dropout(
 						ch_emb, keep_prob=config.keep_prob, is_train=self.is_train)
-					ch_emb = tf.Print(ch_emb,[ch_emb],message="ch_emb")
-					qh_emb = tf.Print(qh_emb,[qh_emb],message="qh_emb")
+					#ch_emb = tf.Print(ch_emb,[ch_emb],message="ch_emb")
+					#qh_emb = tf.Print(qh_emb,[qh_emb],message="qh_emb")
 					qh_emb = dropout(
 						qh_emb, keep_prob=config.keep_prob, is_train=self.is_train)
 					cell_fw = tf.contrib.rnn.GRUCell(dg)
@@ -119,8 +119,8 @@ class Model(object):
 					ch_emb = tf.concat([state_fw, state_bw], axis=1)
 					_, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(
 						cell_fw, cell_bw, qh_emb, self.qh_len, dtype=tf.float32)
-					state_fw = tf.Print(state_fw,[state_fw],message="state_fw")
-					state_bw = tf.Print(state_bw,[state_bw],message="state_bw")
+					#state_fw = tf.Print(state_fw,[state_fw],message="state_fw")
+					#state_bw = tf.Print(state_bw,[state_bw],message="state_bw")
 					qh_emb = tf.concat([state_fw, state_bw], axis=1)
 					qh_emb = tf.reshape(qh_emb, [N, QL, 2 * dg])
 					ch_emb = tf.reshape(ch_emb, [N, PL, 2 * dg])
@@ -199,12 +199,12 @@ class Model(object):
 					pr_att = pr_attention(batch=N, hidden=init.get_shape().as_list(
 						)[-1], keep_prob=config.keep_prob, is_train=self.is_train)
 					r_P = pr_att(init, vj_P, d, self.c_mask)
-					r_P = tf.Print(r_P,[r_P],message="r_p")
+					#r_P = tf.Print(r_P,[r_P],message="r_p")
 					# Wg
 					concatenate = tf.concat([init,r_P],axis=1)
 					g = tf.nn.tanh(dense(concatenate, hidden=d, use_bias=False, scope="g"+str(i)))
 					g_ = dense(g, 1, use_bias=False, scope="g_"+str(i))
-					g = tf.Print(g,[g],message="g")
+					#g = tf.Print(g,[g],message="g")
 					gi.append(g_)
 			gi_ = tf.convert_to_tensor(gi,dtype=tf.float32)
 			#self.gi = tf.nn.softmax(gi_)
