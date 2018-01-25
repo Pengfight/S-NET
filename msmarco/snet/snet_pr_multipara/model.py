@@ -125,7 +125,7 @@ class Model(object):
 					qh_emb = tf.concat([state_fw, state_bw], axis=1)
 					qh_emb = tf.reshape(qh_emb, [N, QL, 2 * dg])
 					ch_emb = tf.reshape(ch_emb, [N, PL, 2 * dg])
-					self.ch_emb = tf.Print(self.ch_emb,[self.ch_emb],message="ch_emb")
+					ch_emb = tf.Print(ch_emb,[ch_emb],message="ch_emb")
 				with tf.name_scope("word"+str(i)):
 					c_emb = tf.nn.embedding_lookup(self.word_mat, self.c_pr[:,i*400:(i+1)*400])
 					q_emb = tf.nn.embedding_lookup(self.word_mat, self.q)
