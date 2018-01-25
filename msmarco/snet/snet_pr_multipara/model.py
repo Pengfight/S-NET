@@ -105,7 +105,7 @@ class Model(object):
 					#print(self.ch_pr.get_shape())
 					#print(self.c.get_shape())
 					#print(self.c_pr.get_shape())
-					self.ch_pr = tf.Print(self.ch_pr,[self.ch_pr],message="ch_pr")
+					self.ch_pr = tf.Print(self.ch_pr,[self.ch_pr[:,2:,:]],message="ch_pr")
 					ch_emb = tf.reshape(tf.nn.embedding_lookup(\
 						self.char_mat, self.ch_pr_), [N * PL, CL, dc])
 					#	self.char_mat, self.ch), [N * PL, CL, dc])
@@ -113,6 +113,8 @@ class Model(object):
 						self.char_mat, self.qh), [N * QL, CL, dc])
 					ch_emb = dropout(
 						ch_emb, keep_prob=config.keep_prob, is_train=self.is_train)
+					ch_emb = tf.Print(ch_emb,[ch_emb],message="ch_emb")
+					qh_emb = tf.Print(qh_emb,[qh_emb],message="qh_emb")
 					qh_emb = dropout(
 						qh_emb, keep_prob=config.keep_prob, is_train=self.is_train)
 					cell_fw = tf.contrib.rnn.GRUCell(dg)
@@ -127,7 +129,7 @@ class Model(object):
 					qh_emb = tf.concat([state_fw, state_bw], axis=1)
 					qh_emb = tf.reshape(qh_emb, [N, QL, 2 * dg])
 					ch_emb = tf.reshape(ch_emb, [N, PL, 2 * dg])
-					ch_emb = tf.Print(ch_emb,[ch_emb],message="ch_emb")
+					#ch_emb = tf.Print(ch_emb,[ch_emb],message="ch_emb")
 				with tf.name_scope("word"+str(i)):
 					c_emb = tf.nn.embedding_lookup(self.word_mat, self.c_pr[:,i*400:(i+1)*400])
 					q_emb = tf.nn.embedding_lookup(self.word_mat, self.q)
