@@ -58,6 +58,11 @@ class Model(object):
 		self.ready()
 
 		if trainable:
+			self.lr = tf.get_variable(
+			"lr", shape=[], dtype=tf.float32, trainable=False)
+			self.opt = tf.train.AdadeltaOptimizer(
+				learning_rate=self.lr, epsilon=1e-6)
+
 			if config.with_passage_ranking:
 				##########################################
 				grads_ee = self.opt.compute_gradients(self.e_loss)
@@ -67,10 +72,6 @@ class Model(object):
 				self.train_op_ee = self.opt.apply_gradients(
 					zip(capped_grads_ee, variables_ee), global_step=self.global_step)
 			else:
-				self.lr = tf.get_variable(
-				"lr", shape=[], dtype=tf.float32, trainable=False)
-				self.opt = tf.train.AdadeltaOptimizer(
-					learning_rate=self.lr, epsilon=1e-6)
 				grads = self.opt.compute_gradients(self.loss)
 				gradients, variables = zip(*grads)
 				capped_grads, _ = tf.clip_by_global_norm(
