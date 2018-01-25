@@ -105,6 +105,7 @@ class Model(object):
 					#print(self.ch_pr.get_shape())
 					#print(self.c.get_shape())
 					#print(self.c_pr.get_shape())
+					self.ch_pr = tf.Print(self.ch_pr.[self.ch_pr],message="ch_pr")
 					ch_emb = tf.reshape(tf.nn.embedding_lookup(\
 						self.char_mat, self.ch_pr_), [N * PL, CL, dc])
 					#	self.char_mat, self.ch), [N * PL, CL, dc])
