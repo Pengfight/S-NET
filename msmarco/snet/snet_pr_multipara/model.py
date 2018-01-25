@@ -190,6 +190,7 @@ class Model(object):
 			#self.yp2 = tf.where(condition, tf.Print(self.yp2,[self.yp2],message="Yp2:"), self.yp1)
 		
 		if config.with_passage_ranking:
+			gi = None
 			for i in range(config.max_para):
 				# Passage ranking
 				with tf.variable_scope("passage-ranking-attention"+str(i)):
@@ -205,17 +206,20 @@ class Model(object):
 					g = tf.nn.tanh(dense(concatenate, hidden=d, use_bias=False, scope="g"+str(i)))
 					g_ = dense(g, 1, use_bias=False, scope="g_"+str(i))
 					#g = tf.Print(g,[g],message="g")
-					gi.append(g_)
-			gi_ = tf.convert_to_tensor(gi,dtype=tf.float32)
+					if i==0:
+						gi = tf.reshape(g_,[N,config.max_para])
+					else:
+						gi = tf.concat([gi,tf.reshape(g_,[N,config.max_para])],axis=0)
+			#gi_ = tf.convert_to_tensor(gi,dtype=tf.float32)
 			#self.gi = tf.nn.softmax(gi_)
-			#self.gi = tf.nn.softmax(gi_)
+			#self.losses3 = tf.nn.softmax_cross_entropy_with_logits(
+			#			logits=gi_, labels=tf.reshape(self.pr,[-1,1]))
 			self.losses3 = tf.nn.softmax_cross_entropy_with_logits(
-						logits=gi_, labels=tf.reshape(self.pr,[-1,1]))
+						logits=gi, labels=self.pr)
 			self.losses3 = tf.Print(self.losses3,[self.losses3,tf.reduce_max(self.losses3),
-				tf.reduce_max(self.pr),tf.reduce_max(gi_)],message="losses3:")
+				tf.reduce_max(self.pr),tf.reduce_max(gi)],message="losses3:")
 			self.pr_loss = tf.reduce_mean(self.losses3)
 			#self.pr_loss = tf.Print(self.pr_loss,[self.pr_loss])
-			#assert(self.pr_loss.get_shape().as_list() == self.loss.get_shape().as_list())
 			self.r = tf.get_variable("r", [1])
 			self.e_loss1 = tf.multiply(self.r,self.loss)
 			self.e_loss2 = tf.multiply(tf.subtract(tf.constant(1.0),self.r),self.loss)
