@@ -143,6 +143,7 @@ def evaluate_batch(model, num_batches, eval_file, sess, data_type, handle, str_h
 		loss_ee = np.mean(losses_ee)
 	metrics = evaluate(eval_file, answer_dict)
 	metrics["loss_esp"] = loss_esp
+	metrics["loss_ee"] = loss_esp
 	if config.with_passage_ranking:
 		metrics["loss_pr"] = loss_pr
 		metrics["loss_ee"] = loss_ee
