@@ -199,7 +199,7 @@ class Model(object):
 					pr_att = pr_attention(batch=N, hidden=init.get_shape().as_list(
 						)[-1], keep_prob=config.keep_prob, is_train=self.is_train)
 					r_P = pr_att(init, vj_P, d, self.c_mask)
-					
+					r_p = tf.Print(r_p,[r_p],message="r_p")
 					# Wg
 					concatenate = tf.concat([init,r_P],axis=1)
 					g = tf.nn.tanh(dense(concatenate, hidden=d, use_bias=False, scope="g"+str(i)))
