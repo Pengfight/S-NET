@@ -206,11 +206,11 @@ class Model(object):
 					g_ = dense(g, 1, use_bias=False, scope="g_"+str(i))
 					gi.append(g_)
 			gi_ = tf.convert_to_tensor(gi)
-			gi = tf.nn.softmax(gi_)
+			self.gi = tf.nn.softmax(gi_)
 			self.losses3 = tf.nn.softmax_cross_entropy_with_logits(
 						logits=gi, labels=tf.reshape(self.pr,[-1,1]))
 			self.pr_loss = tf.reduce_mean(self.losses3)
-
+			self.pr_loss = tf.Print(self.pr_loss,[self.pr_loss])
 			#assert(self.pr_loss.get_shape().as_list() == self.loss.get_shape().as_list())
 			self.r = tf.get_variable("r", [1])
 			self.e_loss1 = tf.multiply(self.r,self.loss)
