@@ -122,6 +122,8 @@ class Model(object):
 					ch_emb = tf.concat([state_fw, state_bw], axis=1)
 					_, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(
 						cell_fw, cell_bw, qh_emb, self.qh_len, dtype=tf.float32)
+					cell_fw = tf.Print(cell_fw,[cell_fw],message="cell_fw")
+					cell_bw = tf.Print(cell_bw,[cell_bw],message="cell_bw")
 					qh_emb = tf.concat([state_fw, state_bw], axis=1)
 					qh_emb = tf.reshape(qh_emb, [N, QL, 2 * dg])
 					ch_emb = tf.reshape(ch_emb, [N, PL, 2 * dg])
