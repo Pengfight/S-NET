@@ -84,11 +84,13 @@ def train(config):
 				sess.run(tf.assign(model.is_train,
 								   tf.constant(False, dtype=tf.bool)))
 				_, summ = evaluate_batch(
-					model, config.val_num_batches, train_eval_file, sess, "train", handle, train_handle)
+					model, config.val_num_batches, train_eval_file, sess, "train", handle,
+					train_handle, config)
 				for s in summ:
 					writer.add_summary(s, global_step)
 				metrics, summ = evaluate_batch(
-					model, dev_total // config.batch_size + 1, dev_eval_file, sess, "dev", handle, dev_handle)
+					model, dev_total // config.batch_size + 1, dev_eval_file, sess, "dev", handle,
+					dev_handle, config)
 				sess.run(tf.assign(model.is_train,
 								   tf.constant(True, dtype=tf.bool)))
 
@@ -111,7 +113,7 @@ def train(config):
 				saver.save(sess, filename)
 
 
-def evaluate_batch(model, num_batches, eval_file, sess, data_type, handle, str_handle):
+def evaluate_batch(model, num_batches, eval_file, sess, data_type, handle, str_handle, config):
 	answer_dict = {}
 	losses_esp = losses_pr = losses_ee = []
 	outlier_count = 0
