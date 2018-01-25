@@ -30,9 +30,9 @@ glove_file = os.path.join(path, "snetP_data", "data", "glove", "glove.840B.300d.
 
 #target_dir = "data"
 target_dir = os.path.join(path, "snetP_data", "rnet", "msmarco", "pr")
-log_dir = os.path.join(path, "snetP_data", "snet", "snet_pr_multipara", "log", "event")
-save_dir = os.path.join(path, "snetP_data", "snet", "snet_pr_multipara", "log", "model")
-answer_dir = os.path.join(path, "snetP_data", "snet", "snet_pr_multipara", "log", "answer")
+log_dir = os.path.join(path, "snetP_data", "snet", "snet_pr_multipara", "log_new", "event")
+save_dir = os.path.join(path, "snetP_data", "snet", "snet_pr_multipara", "log_new", "model")
+answer_dir = os.path.join(path, "snetP_data", "snet", "snet_pr_multipara", "log_new", "answer")
 
 train_record_file = os.path.join(target_dir, "train.tfrecords")
 dev_record_file = os.path.join(target_dir, "dev.tfrecords")
