@@ -199,12 +199,12 @@ class Model(object):
 					pr_att = pr_attention(batch=N, hidden=init.get_shape().as_list(
 						)[-1], keep_prob=config.keep_prob, is_train=self.is_train)
 					r_P = pr_att(init, vj_P, d, self.c_mask)
-
+					
 					# Wg
 					concatenate = tf.concat([init,r_P],axis=1)
 					g = tf.nn.tanh(dense(concatenate, hidden=d, use_bias=False, scope="g"+str(i)))
 					g_ = dense(g, 1, use_bias=False, scope="g_"+str(i))
-					g_= tf.Print(g_,[g_],message="g_")
+					g = tf.Print(g,[g],message="g")
 					gi.append(g_)
 			gi_ = tf.convert_to_tensor(gi,dtype=tf.float32)
 			#self.gi = tf.nn.softmax(gi_)
