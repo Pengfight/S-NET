@@ -206,7 +206,8 @@ class Model(object):
 					g_ = dense(g, 1, use_bias=False, scope="g_"+str(i))
 					gi.append(g_)
 			gi_ = tf.convert_to_tensor(gi)
-			self.gi = tf.nn.softmax(gi_)
+			#self.gi = tf.nn.softmax(gi_)
+			#self.gi = tf.nn.softmax(gi_)
 			self.losses3 = tf.nn.softmax_cross_entropy_with_logits(
 						logits=gi, labels=tf.reshape(self.pr,[-1,1]))
 			self.pr_loss = tf.reduce_mean(self.losses3)
