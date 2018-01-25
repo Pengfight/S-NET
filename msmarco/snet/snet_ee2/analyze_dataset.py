@@ -271,10 +271,15 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 		passage_concat = ''
 		passage_pr_tokens = ['--NULL--']*max_para_count
 		passage_rank = [0]*max_para_count
+		passage_rank_index = 0
 
 		highest_rouge_l_temp = np.zeros(3)
 		individual_rank = np.zeros(max_para_count,dtype=np.int32)
 		#for pi, p in enumerate(article["paragraphs"]):
+		if len(source['passages'])>max_para_count:
+			line = fh.readline()
+			empty_answers += 1
+			continue
 		for j,passage in enumerate(source['passages']):
 			passage_text = passage['passage_text'].replace(
 				"''", '" ').replace("``", '" ').lower()
@@ -295,61 +300,36 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 			for answer_k,k in enumerate(answer):
 				if k.strip() == "":
 					continue
-
 				answer_text = k.strip().lower()
 				answer_text = answer_text[:-1] if answer_text[-1] == "." else answer_text
 				answer_token = word_tokenize(answer_text)
-				index = lcs_tokens(passage_tokens, answer_token)
+				#index = lcs_tokens(passage_tokens, answer_token)
 				#print(index)
 				#####################################################################
 				# individual para scoring:
-				fpr_scores_temp = (0,0,0)
+				fpr_scores = (0,0,0)
 				for l, passage in enumerate(passage_pr_tokens):
-					index_temp = lcs_tokens(passage, answer_token)
+					index = lcs_tokens(passage, answer_token)
 					try:
-						start_idx_temp, end_idx_temp = index_temp[0], index_temp[-1]+1
-						extracted_answer_temp = detokenizer.detokenize(passage[start_idx_temp:end_idx_temp], return_str=True)
-						detoken_ref_answer_temp = detokenizer.detokenize(answer_token, return_str=True)
-						fpr_scores_temp = rouge_l(normalize_answer(extracted_answer_temp), \
-							normalize_answer(detoken_ref_answer_temp))
+						start_idx, end_idx = l*400 + index[0], l*400 + index[-1]+1
+						extracted_answer = detokenizer.detokenize(passage[index[0]:index[-1]+1], return_str=True)
+						detoken_ref_answer = detokenizer.detokenize(answer_token, return_str=True)
+						fpr_scores = rouge_l(normalize_answer(extracted_answer), \
+							normalize_answer(detoken_ref_answer))
 					except Exception as e: 
 						pass
-					if fpr_scores_temp[rouge_metric]>highest_rouge_l_temp[rouge_metric]:
-						highest_rouge_l_temp = fpr_scores_temp
-						answer_texts_temp = [detoken_ref_answer_temp]
-						extracted_answer_text_temp = extracted_answer_temp
-						answer_start_temp, answer_end_temp = start_idx_temp, end_idx_temp
+					if fpr_scores[rouge_metric]>highest_rouge_l[rouge_metric]:
+						highest_rouge_l = fpr_scores
+						answer_texts = [detoken_ref_answer]
+						extracted_answer_text = extracted_answer
+						answer_start, answer_end = start_idx, end_idx
+						passage_rank_index = l
 				#####################################################################
-				fpr_scores = (0,0,0)
-				try:
-					start_idx, end_idx = index[0], index[-1]+1
-					#print("\n\nStart index:{} End index:{}".format(start_idx,end_idx))
-					extracted_answer = detokenizer.detokenize(passage_tokens[start_idx:end_idx], return_str=True)
-					detoken_ref_answer = detokenizer.detokenize(answer_token, return_str=True)
-					# ((start_index, end_index)(Fsummary, precision, recall)
-					# (si, ei) > not used from the line below
-					#_, fpr_scores = rouge_span([extracted_answer], [detoken_ref_answer])
-					fpr_scores = rouge_l(normalize_answer(extracted_answer), \
-						normalize_answer(detoken_ref_answer))
-
-				except Exception as e: # for yes/no type questions, index = []
-					#print(e)
-					#print(index)
-					pass
-				if fpr_scores[rouge_metric]>highest_rouge_l[rouge_metric]:
-					highest_rouge_l = fpr_scores
-					answer_texts = [detoken_ref_answer]
-					extracted_answer_text = extracted_answer
-					answer_start, answer_end = start_idx, end_idx
-				# end of answer for loop
-			for k in range(3):
-				if highest_rouge_l[k]<rouge_l_limit:
-					low_rouge_l[k] += 1
 			################################################################
 			# individual para scoring:
 			for k in range(3):
-				if highest_rouge_l_temp[k]<rouge_l_limit:
-					low_rouge_l_temp[k] += 1
+				if highest_rouge_l[k]<rouge_l_limit:
+					low_rouge_l[k] += 1
 			################################################################
 			if highest_rouge_l[rouge_metric]<rouge_l_limit:
 				#print('\nLOW ROUGE - L\n')
@@ -373,16 +353,8 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 				continue
 			else:
 				p_length_temp = 0
-				for j,passage in enumerate(source['passages']):
-					passage_text = passage['passage_text'].replace(
-						"''", '" ').replace("``", '" ').lower()
-					p_token = word_tokenize(" " + passage_text)
-					p_length_temp += len(p_token)
-					if answer_start<=p_length_temp:
-						passage_rank[j] = 1
-						if answer_end > p_length_temp:
-							multi_para_answer_count += 1
-						break
+				# annotating passage rank
+				passage_rank[passage_rank_index] = 1
 
 		else:
 			answer_text = answer[0].strip()
@@ -446,19 +418,11 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 		if total%1000 == 0:
 			print("{} questions in total".format(len(examples)))
 			print("{} questions with empty answer".format(empty_answers))
-			print("{} questions with low rouge-l answers".format(low_rouge_l))
-			print("{} questions with low rouge-l answers with multipara".format(low_rouge_l_temp))
-			print("{} questions with multipara answers out of total valid examples".format(multi_para_answer_count))
-			print("{} para exceeding paralength".format(para_length_exceeded))
-			print("{} max paralength".format(max_para_length))
+			print("{} questions with low rouge-l answers with multipara".format(low_rouge_l))
 	random.shuffle(examples)
 	print("{} questions in total".format(len(examples)))
 	print("{} questions with empty answer".format(empty_answers))
-	print("{} questions with low rouge-l answers".format(low_rouge_l))
-	print("{} questions with low rouge-l answers with multipara".format(low_rouge_l_temp))
-	print("{} questions with multipara answers out of total valid examples".format(multi_para_answer_count))
-	print("{} para exceeding paralength".format(para_length_exceeded))
-	print("{} max paralength".format(max_para_length))
+	print("{} questions with low rouge-l answers with multipara".format(low_rouge_l))
 
 
 	"""
@@ -574,13 +538,16 @@ def build_features(config, examples, data_type, out_file, word2idx_dict, char2id
 		passage_char_idxs = np.zeros([para_limit, char_limit], dtype=np.int32)
 
 		# for passage ranking
-		passage_pr_idxs = np.zeros([config.max_para, para_limit], dtype=np.int32)
-		passage_char_pr_idxs = np.zeros([config.max_para, para_limit, char_limit], dtype=np.int32)
+		passage_pr_idxs = np.zeros([para_limit*config.max_para], dtype=np.int32)
+		passage_char_pr_idxs = np.zeros([para_limit*config.max_para, char_limit], dtype=np.int32)
 		
 		ques_idxs = np.zeros([ques_limit], dtype=np.int32)
 		ques_char_idxs = np.zeros([ques_limit, char_limit], dtype=np.int32)
 		y1 = np.zeros([para_limit], dtype=np.float32)
 		y2 = np.zeros([para_limit], dtype=np.float32)
+
+		y1_pr = np.zeros([para_limit*config.max_para], dtype=np.float32)
+		y2_pr = np.zeros([para_limit*config.max_para], dtype=np.float32)
 		#y1 = np.zeros([config.max_para,para_limit], dtype=np.float32)
 		#y2 = np.zeros([config.max_para,para_limit], dtype=np.float32)
 
@@ -616,17 +583,18 @@ def build_features(config, examples, data_type, out_file, word2idx_dict, char2id
 		# for passage ranking
 		for i, paragraph in enumerate(example["passage_pr_tokens"]):
 			for j, token in enumerate(paragraph):
-				passage_pr_idxs[i,j] = _get_word(token)
+				passage_pr_idxs[i*400+j] = _get_word(token)
 		# for pr
 		for i, paragraph in enumerate(example["passage_pr_chars"]):
 			for j, token in enumerate(paragraph):
 				for k, char in enumerate(token):
 					if k == char_limit:
 						break
-					passage_char_pr_idxs[i, j, k] = _get_char(char)
+					passage_char_pr_idxs[i*400+j, k] = _get_char(char)
 
 		start, end = example["y1s"][-1], example["y2s"][-1]
-		y1[start], y2[end] = 1.0, 1.0
+		y1[start%400], y2[end%400] = 1.0, 1.0
+		y1_pr[start], y2_pr[end] = 1.0, 1.0
 
 		record = tf.train.Example(features=tf.train.Features(feature={
 								  "passage_idxs": tf.train.Feature(bytes_list=tf.train.BytesList(value=[passage_idxs.tostring()])),
@@ -638,6 +606,8 @@ def build_features(config, examples, data_type, out_file, word2idx_dict, char2id
 								  "passage_char_pr_idxs": tf.train.Feature(bytes_list=tf.train.BytesList(value=[passage_char_pr_idxs.tostring()])),
 								  "y1": tf.train.Feature(bytes_list=tf.train.BytesList(value=[y1.tostring()])),
 								  "y2": tf.train.Feature(bytes_list=tf.train.BytesList(value=[y2.tostring()])),
+								  "y1_pr": tf.train.Feature(bytes_list=tf.train.BytesList(value=[y1_pr.tostring()])),
+								  "y2_pr": tf.train.Feature(bytes_list=tf.train.BytesList(value=[y2_pr.tostring()])),
 								  "id": tf.train.Feature(int64_list=tf.train.Int64List(value=[example["id"]]))
 								  }))
 		writer.write(record.SerializeToString())

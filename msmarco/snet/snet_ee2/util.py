@@ -22,34 +22,50 @@ def get_record_parser(config, is_test=False):
 											   "passage_idxs": tf.FixedLenFeature([], tf.string),
 											   "ques_idxs": tf.FixedLenFeature([], tf.string),
 											   "passage_char_idxs": tf.FixedLenFeature([], tf.string),
-											   "passage_pr_char_idxs": tf.FixedLenFeature([], tf.string),
+											   "passage_char_pr_idxs": tf.FixedLenFeature([], tf.string),
 											   "ques_char_idxs": tf.FixedLenFeature([], tf.string),
 											   "passage_rank": tf.FixedLenFeature([], tf.string),
 											   "y1": tf.FixedLenFeature([], tf.string),
 											   "y2": tf.FixedLenFeature([], tf.string),
+											   "y1_pr": tf.FixedLenFeature([], tf.string),
+											   "y2_pr": tf.FixedLenFeature([], tf.string),
 											   "id": tf.FixedLenFeature([], tf.int64)
 										   })
 		passage_idxs = tf.reshape(tf.decode_raw(
 			features["passage_idxs"], tf.int32), [para_limit])
+		print(passage_idxs.get_shape())
 		passage_pr_idxs = tf.reshape(tf.decode_raw(
-			features["passage_pr_idxs"], tf.int32), [config.max_para, para_limit])
+			features["passage_pr_idxs"], tf.int32), [config.max_para*para_limit])
+		print(passage_pr_idxs.get_shape())
 		ques_idxs = tf.reshape(tf.decode_raw(
 			features["ques_idxs"], tf.int32), [ques_limit])
+		print(ques_idxs.get_shape())
 		passage_char_idxs = tf.reshape(tf.decode_raw(
 			features["passage_char_idxs"], tf.int32), [para_limit, char_limit])
-		passage_pr_char_idxs = tf.reshape(tf.decode_raw(
-			features["passage_pr_char_idxs"], tf.int32), [config.max_para, para_limit, char_limit])
+		print(passage_char_idxs.get_shape())
+		passage_char_pr_idxs = tf.reshape(tf.decode_raw(
+			features["passage_char_pr_idxs"], tf.int32), [config.max_para*para_limit, char_limit])
+		print(passage_char_pr_idxs.get_shape())
 		passage_rank = tf.reshape(tf.decode_raw(
 			features["passage_rank"], tf.float32), [config.max_para])
+		#print(tf.shape(passage_rank))
 		ques_char_idxs = tf.reshape(tf.decode_raw(
 			features["ques_char_idxs"], tf.int32), [ques_limit, char_limit])
+		#print(tf.shape(ques_char_idxs))
 		y1 = tf.reshape(tf.decode_raw(
 			features["y1"], tf.float32), [para_limit])
+		#print(tf.shape(y1))
 		y2 = tf.reshape(tf.decode_raw(
 			features["y2"], tf.float32), [para_limit])
+		y1_pr = tf.reshape(tf.decode_raw(
+			features["y1_pr"], tf.float32), [config.max_para*para_limit])
+		y2_pr = tf.reshape(tf.decode_raw(
+			features["y2_pr"], tf.float32), [config.max_para*para_limit])
 		qa_id = features["id"]
-		return passage_idxs, ques_idxs, passage_char_idxs, ques_char_idxs, y1, y2, qa_id, \
-			   passage_pr_idxs, passage_pr_char_idxs, passage_rank
+		#return passage_idxs, ques_idxs, passage_char_idxs, ques_char_idxs, y1, y2, qa_id, \
+		#	   passage_pr_idxs, passage_char_pr_idxs, passage_rank
+		return passage_idxs, ques_idxs, passage_char_idxs, ques_char_idxs, y1, y2, qa_id,\
+			   passage_pr_idxs, passage_char_pr_idxs, passage_rank, y1_pr, y2_pr
 	return parse
 
 
@@ -61,7 +77,7 @@ def get_batch_dataset(record_file, parser, config):
 		buckets = [tf.constant(num) for num in range(*config.bucket_range)]
 
 		def key_func(passage_idxs, ques_idxs, passage_char_idxs, ques_char_idxs, y1, y2, qa_id, \
-					passage_pr_idxs, passage_pr_char_idxs, passage_rank):
+					passage_pr_idxs, passage_pr_char_idxs, passage_rank, y1_pr, y2_pr):
 			c_len = tf.reduce_sum(
 				tf.cast(tf.cast(passage_idxs, tf.bool), tf.int32))
 			t = tf.clip_by_value(buckets, 0, c_len)

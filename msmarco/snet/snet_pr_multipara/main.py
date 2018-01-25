@@ -60,21 +60,26 @@ def train(config):
 		print("Started training")
 		for _ in tqdm(range(1, config.num_steps + 1)):
 			global_step = sess.run(model.global_step) + 1
-			loss_esp, loss_pr, loss_ee, train_op, train_op_pr, train_op_ee = sess.run(
-				[model.loss, model.pr_loss, model.e_loss, 
-				model.train_op, model.train_op_pr, model.train_op_ee],
-				feed_dict={ handle: train_handle})
+			if config.with_passage_ranking:
+				loss_esp, loss_pr, loss_ee, train_op, train_op_pr, train_op_ee = sess.run(
+					[model.loss, model.pr_loss, model.e_loss, 
+					model.train_op, model.train_op_pr, model.train_op_ee],
+					feed_dict={ handle: train_handle})
+			else:
+				loss_esp, train_op = sess.run([model.loss, model.train_op],
+					feed_dict={ handle: train_handle})
 
 			if global_step % config.period == 0:
 				loss_sum1 = tf.Summary(value=[tf.Summary.Value(
 					tag="model/loss_esp", simple_value=loss_esp), ])
-				loss_sum2 = tf.Summary(value=[tf.Summary.Value(
-					tag="model/loss_pr", simple_value=loss_pr), ])
-				loss_sum3 = tf.Summary(value=[tf.Summary.Value(
-					tag="model/loss_ee", simple_value=loss_ee), ])
+				if config.with_passage_ranking:
+					loss_sum2 = tf.Summary(value=[tf.Summary.Value(
+						tag="model/loss_pr", simple_value=loss_pr), ])
+					loss_sum3 = tf.Summary(value=[tf.Summary.Value(
+						tag="model/loss_ee", simple_value=loss_ee), ])
+					writer.add_summary(loss_sum2, global_step)
+					writer.add_summary(loss_sum3, global_step)
 				writer.add_summary(loss_sum1, global_step)
-				writer.add_summary(loss_sum2, global_step)
-				writer.add_summary(loss_sum3, global_step)
 			if global_step % config.checkpoint == 0:
 				sess.run(tf.assign(model.is_train,
 								   tf.constant(False, dtype=tf.bool)))
@@ -111,9 +116,14 @@ def evaluate_batch(model, num_batches, eval_file, sess, data_type, handle, str_h
 	losses_esp = losses_pr = losses_ee = []
 	outlier_count = 0
 	for _ in tqdm(range(1, num_batches + 1)):
-		qa_id, loss_esp, loss_pr, loss_ee, yp1, yp2, = sess.run(
-			[model.qa_id, model.loss, model.pr_loss, model.e_loss, model.yp1, model.yp2],
-			feed_dict={handle: str_handle})
+		if config.with_passage_ranking:
+			qa_id, loss_esp, loss_pr, loss_ee, yp1, yp2, = sess.run(
+				[model.qa_id, model.loss, model.pr_loss, model.e_loss, model.yp1, model.yp2],
+				feed_dict={handle: str_handle})
+		else:
+			qa_id, loss_esp, yp1, yp2, = sess.run(
+				[model.qa_id, model.loss, model.yp1, model.yp2],
+				feed_dict={handle: str_handle})
 		answer_dict_, _, outlier = convert_tokens(
 			eval_file, qa_id.tolist(), yp1.tolist(), yp2.tolist())
 		if outlier:
@@ -121,22 +131,26 @@ def evaluate_batch(model, num_batches, eval_file, sess, data_type, handle, str_h
 			continue
 		answer_dict.update(answer_dict_)
 		losses_esp.append(loss_esp)
-		losses_pr.append(loss_pr)
-		losses_ee.append(loss_ee)
+		if config.with_passage_ranking:
+			losses_pr.append(loss_pr)
+			losses_ee.append(loss_ee)
 	#print("outlier_count:",outlier_count)
 	loss_esp = np.mean(losses_esp)
-	loss_pr = np.mean(losses_pr)
-	loss_ee = np.mean(losses_ee)
+	if config.with_passage_ranking:
+		loss_pr = np.mean(losses_pr)
+		loss_ee = np.mean(losses_ee)
 	metrics = evaluate(eval_file, answer_dict)
 	metrics["loss_esp"] = loss_esp
-	metrics["loss_pr"] = loss_pr
-	metrics["loss_ee"] = loss_ee
+	if config.with_passage_ranking:
+		metrics["loss_pr"] = loss_pr
+		metrics["loss_ee"] = loss_ee
 	loss_sum1 = tf.Summary(value=[tf.Summary.Value(
 		tag="{}/loss_esp".format(data_type), simple_value=metrics["loss_esp"]), ])
-	loss_sum2 = tf.Summary(value=[tf.Summary.Value(
-		tag="{}/loss_pr".format(data_type), simple_value=metrics["loss_pr"]), ])
-	loss_sum3 = tf.Summary(value=[tf.Summary.Value(
-		tag="{}/loss_ee".format(data_type), simple_value=metrics["loss_ee"]), ])
+	if config.with_passage_ranking:
+		loss_sum2 = tf.Summary(value=[tf.Summary.Value(
+			tag="{}/loss_pr".format(data_type), simple_value=metrics["loss_pr"]), ])
+		loss_sum3 = tf.Summary(value=[tf.Summary.Value(
+			tag="{}/loss_ee".format(data_type), simple_value=metrics["loss_ee"]), ])
 	f1_sum = tf.Summary(value=[tf.Summary.Value(
 		tag="{}/f1".format(data_type), simple_value=metrics["f1"]), ])
 	em_sum = tf.Summary(value=[tf.Summary.Value(
@@ -149,8 +163,9 @@ def evaluate_batch(model, num_batches, eval_file, sess, data_type, handle, str_h
 		tag="{}/rouge-l-r".format(data_type), simple_value=metrics["rouge-l-r"]), ])
 	outlier_c = tf.Summary(value=[tf.Summary.Value(
 		tag="{}/outlier_count".format(data_type), simple_value=outlier_count), ])
-	return metrics, [loss_sum1, loss_sum2, loss_sum3, rouge_l_f]
-
+	if config.with_passage_ranking:
+		return metrics, [loss_sum1, loss_sum2, loss_sum3, rouge_l_f]
+	return metrics, [loss_sum1, rouge_l_f]
 
 def test(config):
 
