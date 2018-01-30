@@ -1,6 +1,7 @@
 import tensorflow as tf
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 
 flags = tf.flags
 
@@ -164,3 +165,9 @@ with sess.as_default():
 		json_dict[int(qa_id)] = int(h)
 	with open('para_metadata.json','w') as fp:
 		json.dump(concat_para_length,fp)
+#matplotlib inline
+#x = np.random.normal(size = 1000)
+plt.hist(list(json_dict), bins='auto')
+plt.title("Histogram with 'auto' bins")
+plt.ylabel('para length')
+plt.show()
