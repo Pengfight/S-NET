@@ -1,5 +1,6 @@
 import tensorflow as tf
 import os
+import numpy as np
 
 flags = tf.flags
 
@@ -158,5 +159,6 @@ with sess.as_default():
 		h = tf.count_nonzero(a,dtype=tf.int32)
 		j = a.get_shape().as_list()
 		a = a.eval()
-		h = h.eval()	
+		h = h.eval()
+		h = np.count_nonzero(a)	
 		print(a,j,h)
