@@ -151,14 +151,16 @@ def get_record_parser(config, is_test=False):
 		qa_id = features["id"]
 		return passage_idxs, ques_idxs, passage_char_idxs, ques_char_idxs, y1, y2, qa_id
 	return parse
+json_dict = {}
 sess = tf.Session()
 with sess.as_default():
 	for i in iterator:
 		parse = get_record_parser(config)
 		a,b,c,d,e,f,g = parse(i)
 		h = tf.count_nonzero(a,dtype=tf.int32)
-		j = a.get_shape().as_list()
+		qa_id = g.eval()
 		a = a.eval()
-		h = h.eval()
 		h = np.count_nonzero(a)	
-		print(a,j,h)
+		json_dict[int(qa_id)] = int(h)
+	with open('para_metadata.json','w') as fp:
+		json.dump(concat_para_length,fp)
