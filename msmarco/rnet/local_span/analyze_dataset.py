@@ -296,7 +296,9 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 				fpr_scores = (0,0,0)
 				token_count = 0
 				for l, passage in enumerate(source['passages']):
-					passage_token = word_tokenize(passage)
+					passage_text = passage['passage_text'].replace(
+						"''", '" ').replace("``", '" ').lower()
+					passage_token = word_tokenize(passage_text)
 					index = lcs_tokens(passage_token, answer_token)
 					try:
 						start_idx, end_idx = token_count + index[0], token_count + index[-1]+1
