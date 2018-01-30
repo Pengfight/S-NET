@@ -104,7 +104,7 @@ flags.DEFINE_boolean("use_cudnn", True, "Whether to use cudnn rnn (should be Fal
 flags.DEFINE_boolean("is_bucket", True, "build bucket batch iterator or not")
 flags.DEFINE_boolean("line_limit_prepro", False, "limit prepro to limited number of lines for POC")
 flags.DEFINE_boolean("with_passage_ranking", False, "Enable Passage Ranking part")
-flags.DEFINE_boolean("use_padded_preprocessing", False, "Enable Passage Ranking part")
+flags.DEFINE_boolean("visualize_matplot", False, "Save concatenated para length of each query id")
 flags.DEFINE_integer("bucket_range", [40, 401, 40], "the range of bucket")
 
 flags.DEFINE_integer("rouge_metric", 0, "# 0 = f, 1 = p, 2 = r")

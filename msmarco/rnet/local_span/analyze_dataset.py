@@ -230,7 +230,7 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 	rouge_l_limit = 0.7
 	remove_tokens = ["'",'"','.',',','']
 	eval_examples = {}
-
+	
 	fh = open(filename, "r")
 	line = fh.readline()
 	line_limit = 100
@@ -255,6 +255,8 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 	total = empty_answers = 0
 	low_rouge_l = np.zeros(3,dtype=np.int32)
 
+	# token length of concatenated passages by each query id
+	concat_para_length = {}
 	# para exceeding length
 	max_para_length = 0
 	for i in tqdm(range(total_lines)):
@@ -387,6 +389,8 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 		y1s.append(y1)
 		y2s.append(y2)
 		total += 1
+		concat_para_length[source["query_id"]] = len(passage_tokens)
+
 		example = {"passage_tokens": passage_tokens, "passage_chars": passage_chars, "ques_tokens": ques_tokens,
 				   "ques_chars": ques_chars, "y1s": y1s, "y2s": y2s, "id": total, "uuid": source["query_id"],}
 		examples.append(example)
@@ -403,6 +407,8 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 	print("{} questions with empty answer".format(empty_answers))
 	print("{} questions with low rouge-l answers without multipara".format(low_rouge_l))
 	print("{} max-para length".format(max_para_length))
+	with open('para_metadata.json','w') as fp:
+		json.dump(concat_para_length,fp)
 	"""
 	# original implementation for comparision purposes
 	with open(filename, "r") as fh:
