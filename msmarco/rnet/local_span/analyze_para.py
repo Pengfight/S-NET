@@ -155,4 +155,8 @@ with sess.as_default():
 	for i in iterator:
 		parse = get_record_parser(config)
 		a,b,c,d,e,f,g = parse(i)
-		print(a.eval(),g.eval())
+		h = tf.reduce_sum(tf.cast(tf.cast(a, tf.bool), tf.int32))
+		a = a.eval()
+		g = g.eval()
+		h = h.eval()
+		print(a,g,h)
