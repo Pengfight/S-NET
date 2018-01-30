@@ -10,17 +10,17 @@ from main import train, test
 flags = tf.flags
 
 home = os.path.expanduser("~")
-hdd2 = "/media/hdd2"
+hdd2 = "/media/hdd2/snetP_data"
 
 if os.path.isdir(hdd2):
 	path = hdd2
 else:
 	path = home
 
-train_file = os.path.join(path, "snetP_data", "data", "msmarco", "train_v1.1.json")
-dev_file = os.path.join(path, "snetP_data", "data", "msmarco", "dev_v1.1.json")
-test_file = os.path.join(path, "snetP_data", "data", "msmarco", "dev_v1.1.json")
-glove_file = os.path.join(path, "snetP_data", "data", "glove", "glove.840B.300d.txt")
+train_file = os.path.join(path, "data", "msmarco", "train_v1.1.json")
+dev_file = os.path.join(path, "data", "msmarco", "dev_v1.1.json")
+test_file = os.path.join(path, "data", "msmarco", "dev_v1.1.json")
+glove_file = os.path.join(path, "data", "glove", "glove.840B.300d.txt")
 
 #train_file = os.path.join(hdd2, "snetP_data", "data", "msmarco", "train_v1.1.json")
 #dev_file = os.path.join(hdd2, "snetP_data", "data", "msmarco", "dev_v1.1.json")
@@ -29,10 +29,10 @@ glove_file = os.path.join(path, "snetP_data", "data", "glove", "glove.840B.300d.
 #target_dir = os.path.join(hdd2, "snetP_data", "snet_data")
 
 #target_dir = "data"
-target_dir = os.path.join(path, "snetP_data", "rnet", "msmarco", "pr")
-log_dir = os.path.join(path, "snetP_data", "snet", "snet_pr_multipara", "log", "event")
-save_dir = os.path.join(path, "snetP_data", "snet", "snet_pr_multipara", "log", "model")
-answer_dir = os.path.join(path, "snetP_data", "snet", "snet_pr_multipara", "log", "answer")
+target_dir = os.path.join(path, "preprocess", "rnet", "msmarco", "global_span")
+log_dir = os.path.join(path, "rnet", "msmarco", "global_span", "log", "event")
+save_dir = os.path.join(path, "rnet", "msmarco", "global_span", "log", "model")
+answer_dir = os.path.join(path, "rnet", "msmarco", "global_span", "log", "answer")
 
 train_record_file = os.path.join(target_dir, "train.tfrecords")
 dev_record_file = os.path.join(target_dir, "dev.tfrecords")
@@ -108,7 +108,7 @@ flags.DEFINE_boolean("use_padded_preprocessing", True, "Enable Passage Ranking p
 flags.DEFINE_integer("bucket_range", [40, 401, 40], "the range of bucket")
 
 flags.DEFINE_integer("rouge_metric", 0, "# 0 = f, 1 = p, 2 = r")
-flags.DEFINE_integer("batch_size", 16, "Batch size") # 64
+flags.DEFINE_integer("batch_size", 64, "Batch size") # 64
 flags.DEFINE_integer("num_steps", 50000, "Number of steps")
 flags.DEFINE_integer("checkpoint", 1000, "checkpoint to save and evaluate the model")
 flags.DEFINE_integer("period", 100, "period to save batch loss")
@@ -117,7 +117,7 @@ flags.DEFINE_float("init_lr", 0.5, "Initial learning rate for Adadelta")
 flags.DEFINE_float("keep_prob", 0.7, "Dropout keep prob in rnn") #0.7
 flags.DEFINE_float("ptr_keep_prob", 0.7, "Dropout keep prob for pointer network") #0.7
 flags.DEFINE_float("grad_clip", 5.0, "Global Norm gradient clipping rate")
-flags.DEFINE_integer("hidden", 150, "Hidden size") #75
+flags.DEFINE_integer("hidden", 75, "Hidden size") #75
 flags.DEFINE_integer("char_hidden", 100, "GRU dimention for char")
 flags.DEFINE_integer("patience", 3, "Patience for learning rate decay")
 flags.DEFINE_string("bd","bd","bd")
