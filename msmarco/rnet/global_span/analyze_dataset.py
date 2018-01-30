@@ -252,12 +252,10 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 		total_lines = line_limit
 	#while(line):
 	
-	total = empty_answers = multi_para_answer_count = 0
+	total = empty_answers = 0
 	low_rouge_l = np.zeros(3,dtype=np.int32)
 
-	# individual para span generation
-	para_with_answer_count = np.zeros(max_para_count,dtype=np.int32)
-	low_rouge_l_temp = np.zeros(3,dtype=np.int32)
+		low_rouge_l_temp = np.zeros(3,dtype=np.int32)
 
 	# para exceeding length
 	max_para_length = 0
@@ -507,6 +505,7 @@ def build_features(config, examples, data_type, out_file, word2idx_dict, char2id
 		total_ += 1
 
 		if filter_func(example, is_test):
+			print("Filtered")
 			continue
 
 		total += 1
@@ -561,6 +560,7 @@ def build_features(config, examples, data_type, out_file, word2idx_dict, char2id
 								  }))
 		writer.write(record.SerializeToString())
 	print("Build {} / {} instances of features in total".format(total, total_))
+	print("Processed {} examples...".format(total))
 	meta["total"] = total
 	writer.close()
 	return meta
