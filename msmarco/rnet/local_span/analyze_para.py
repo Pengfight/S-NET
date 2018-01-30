@@ -78,7 +78,7 @@ flags.DEFINE_string("dev_meta", dev_meta, "Out file for dev meta")
 flags.DEFINE_string("test_meta", test_meta, "Out file for test meta")
 flags.DEFINE_string("answer_file", answer_file, "Out file for answer")
 
-flags.DEFINE_string("gpu_id", "3", "gpu id to use for training")
+flags.DEFINE_string("gpu_id", "2", "gpu id to use for training")
 
 flags.DEFINE_integer("glove_size", int(2.2e6), "Corpus size for Glove")
 flags.DEFINE_integer("glove_dim", 300, "Embedding dimension for Glove")
@@ -153,7 +153,10 @@ def get_record_parser(config, is_test=False):
 		return passage_idxs, ques_idxs, passage_char_idxs, ques_char_idxs, y1, y2, qa_id
 	return parse
 json_dict = {}
-sess = tf.Session()
+gpu_options = tf.GPUOptions(visible_device_list=config.gpu_id)
+sess_config = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)
+sess_config.gpu_options.allow_growth = True
+sess = tf.Session(config=sess_config)
 with sess.as_default():
 	for i in iterator:
 		parse = get_record_parser(config)
