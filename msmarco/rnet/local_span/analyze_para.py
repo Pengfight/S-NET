@@ -158,6 +158,6 @@ with sess.as_default():
 		h = tf.reduce_sum(tf.cast(tf.cast(a[:], tf.bool), tf.int32))
 		j = tf.cast(a, tf.bool)
 		a = a.eval()
-		g = g.eval()
+		j = j.eval()
 		h = h.eval()	
 		print(a,g,h)
