@@ -265,9 +265,6 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 		extracted_answer_text = ''
 		passage_concat = ''
 
-		highest_rouge_l_temp = np.zeros(3)
-		individual_rank = np.zeros(max_para_count,dtype=np.int32)
-		#for pi, p in enumerate(article["paragraphs"]):
 		if len(source['passages'])>max_para_count:
 			line = fh.readline()
 			empty_answers += 1
@@ -303,7 +300,8 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 					index = lcs_tokens(passage_token, answer_token)
 					try:
 						start_idx, end_idx = token_count + index[0], token_count + index[-1]+1
-						extracted_answer = detokenizer.detokenize(passage[index[0]:index[-1]+1], return_str=True)
+						extracted_answer = detokenizer.detokenize(passage_token[index[0]:index[-1]+1],
+							return_str=True)
 						detoken_ref_answer = detokenizer.detokenize(answer_token, return_str=True)
 						fpr_scores = rouge_l(normalize_answer(extracted_answer), \
 							normalize_answer(detoken_ref_answer))
@@ -314,7 +312,6 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 						answer_texts = [detoken_ref_answer]
 						extracted_answer_text = extracted_answer
 						answer_start, answer_end = start_idx, end_idx
-						passage_rank_index = l
 					token_count += len(passage_token)
 			for k in range(3):
 				if highest_rouge_l[k]<rouge_l_limit:
