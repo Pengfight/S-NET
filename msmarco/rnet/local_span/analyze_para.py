@@ -1,0 +1,79 @@
+import tensorflow as tf
+flags = tf.flags
+
+flags.DEFINE_integer("glove_size", int(2.2e6), "Corpus size for Glove")
+flags.DEFINE_integer("glove_dim", 300, "Embedding dimension for Glove")
+flags.DEFINE_integer("char_dim", 8, "Embedding dimension for char")
+flags.DEFINE_integer("para_limit", 1500, "Limit length for paragraph")
+flags.DEFINE_integer("max_para", 10, "Limit length for paragraph")
+flags.DEFINE_integer("ques_limit", 50, "Limit length for question")
+flags.DEFINE_integer("test_para_limit", 1000,
+					 "Limit length for paragraph in test file")
+flags.DEFINE_integer("test_ques_limit", 100,
+					 "Limit length for question in test file")
+flags.DEFINE_integer("char_limit", 16, "Limit length for character")
+flags.DEFINE_integer("word_count_limit", -1, "Min count for word")
+flags.DEFINE_integer("char_count_limit", -1, "Min count for char")
+
+flags.DEFINE_integer("capacity", 15000, "Batch size of dataset shuffle")
+flags.DEFINE_integer("num_threads", 4, "Number of threads in input pipeline")
+flags.DEFINE_boolean("use_cudnn", True, "Whether to use cudnn rnn (should be False for CPU)")
+flags.DEFINE_boolean("is_bucket", True, "build bucket batch iterator or not")
+flags.DEFINE_boolean("line_limit_prepro", False, "limit prepro to limited number of lines for POC")
+flags.DEFINE_boolean("with_passage_ranking", False, "Enable Passage Ranking part")
+flags.DEFINE_boolean("visualize_matplot", False, "Save concatenated para length of each query id")
+flags.DEFINE_integer("bucket_range", [40, 401, 40], "the range of bucket")
+
+flags.DEFINE_integer("rouge_metric", 0, "# 0 = f, 1 = p, 2 = r")
+flags.DEFINE_integer("batch_size", 16, "Batch size") # 64
+flags.DEFINE_integer("num_steps", 50000, "Number of steps")
+flags.DEFINE_integer("checkpoint", 1000, "checkpoint to save and evaluate the model")
+flags.DEFINE_integer("period", 100, "period to save batch loss")
+flags.DEFINE_integer("val_num_batches", 150, "Number of batches to evaluate the model")
+flags.DEFINE_float("init_lr", 0.5, "Initial learning rate for Adadelta")
+flags.DEFINE_float("keep_prob", 0.7, "Dropout keep prob in rnn") #0.7
+flags.DEFINE_float("ptr_keep_prob", 0.7, "Dropout keep prob for pointer network") #0.7
+flags.DEFINE_float("grad_clip", 5.0, "Global Norm gradient clipping rate")
+flags.DEFINE_integer("hidden", 75, "Hidden size") #75
+flags.DEFINE_integer("char_hidden", 100, "GRU dimention for char")
+flags.DEFINE_integer("patience", 3, "Patience for learning rate decay")
+
+filename = "train.tfrecords"
+
+iterator = tf.python_io.tf_record_iterator(path=filename)
+config = flags.FLAGS
+
+def get_record_parser(config, is_test=False):
+	def parse(example):
+		para_limit = config.test_para_limit if is_test else config.para_limit
+		ques_limit = config.test_ques_limit if is_test else config.ques_limit
+		char_limit = config.char_limit
+		features = tf.parse_single_example(example,
+										   features={
+											   "passage_idxs": tf.FixedLenFeature([], tf.string),
+											   "ques_idxs": tf.FixedLenFeature([], tf.string),
+											   "passage_char_idxs": tf.FixedLenFeature([], tf.string),
+											   "ques_char_idxs": tf.FixedLenFeature([], tf.string),
+											   "y1": tf.FixedLenFeature([], tf.string),
+											   "y2": tf.FixedLenFeature([], tf.string),
+											   "id": tf.FixedLenFeature([], tf.int64)
+										   })
+		passage_idxs = tf.reshape(tf.decode_raw(
+			features["passage_idxs"], tf.int32), [para_limit])
+		ques_idxs = tf.reshape(tf.decode_raw(
+			features["ques_idxs"], tf.int32), [ques_limit])
+		passage_char_idxs = tf.reshape(tf.decode_raw(
+			features["passage_char_idxs"], tf.int32), [para_limit, char_limit])
+		ques_char_idxs = tf.reshape(tf.decode_raw(
+			features["ques_char_idxs"], tf.int32), [ques_limit, char_limit])
+		y1 = tf.reshape(tf.decode_raw(
+			features["y1"], tf.float32), [para_limit])
+		y2 = tf.reshape(tf.decode_raw(
+			features["y2"], tf.float32), [para_limit])
+		qa_id = features["id"]
+		return passage_idxs, ques_idxs, passage_char_idxs, ques_char_idxs, y1, y2, qa_id
+	return parse
+
+for i in iterator:
+	parse = get_record_parser(config)
+	print(parse(i))
