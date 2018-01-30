@@ -160,4 +160,4 @@ with sess.as_default():
 		a = a.eval()
 		j = j.eval()
 		h = h.eval()	
-		print(a,g,h)
+		print(a,j,h)
