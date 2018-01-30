@@ -153,4 +153,5 @@ def get_record_parser(config, is_test=False):
 
 for i in iterator:
 	parse = get_record_parser(config)
-	print(parse(i))
+	a,b,c,d,e,f,g = parse(i)
+	print(a.eval(),g.eval())
