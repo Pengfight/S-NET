@@ -399,13 +399,13 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 		if total%1000 == 0:
 			print("{} questions in total".format(len(examples)))
 			print("{} questions with empty answer".format(empty_answers))
-			print("{} questions with low rouge-l answers with multipara".format(low_rouge_l))
+			print("{} questions with low rouge-l answers without multipara".format(low_rouge_l))
 			print("{} max-para length".format(max_para_length))
 	random.shuffle(examples)
 	print("{} questions in total".format(len(examples)))
 	print("{} questions with empty answer".format(empty_answers))
-	print("{} questions with low rouge-l answers with multipara".format(low_rouge_l))
-
+	print("{} questions with low rouge-l answers without multipara".format(low_rouge_l))
+	print("{} max-para length".format(max_para_length))
 	"""
 	# original implementation for comparision purposes
 	with open(filename, "r") as fh:
