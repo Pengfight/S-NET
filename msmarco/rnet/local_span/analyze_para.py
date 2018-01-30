@@ -158,6 +158,5 @@ with sess.as_default():
 		h = tf.count_nonzero(a,dtype=tf.int32)
 		j = a.get_shape().as_list()
 		a = a.eval()
-		j = j.eval()
 		h = h.eval()	
 		print(a,j,h)
