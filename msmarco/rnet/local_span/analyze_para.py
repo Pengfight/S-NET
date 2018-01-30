@@ -1,6 +1,81 @@
 import tensorflow as tf
 flags = tf.flags
 
+ome = os.path.expanduser("~")
+hdd2 = "/media/hdd2/snetP_data"
+
+if os.path.isdir(hdd2):
+	path = hdd2
+else:
+	path = home
+
+train_file = os.path.join(path, "data", "msmarco", "train_v1.1.json")
+dev_file = os.path.join(path, "data", "msmarco", "dev_v1.1.json")
+test_file = os.path.join(path, "data", "msmarco", "dev_v1.1.json")
+glove_file = os.path.join(path, "data", "glove", "glove.840B.300d.txt")
+
+#train_file = os.path.join(hdd2, "snetP_data", "data", "msmarco", "train_v1.1.json")
+#dev_file = os.path.join(hdd2, "snetP_data", "data", "msmarco", "dev_v1.1.json")
+#test_file = os.path.join(hdd2, "snetP_data", "data", "msmarco", "test_public_v1.1.json")
+#glove_file = os.path.join(hdd2, "snetP_data", "data", "glove", "glove.840B.300d.txt")
+#target_dir = os.path.join(hdd2, "snetP_data", "snet_data")
+
+#target_dir = "data"
+target_dir = os.path.join(path, "preprocess", "rnet", "msmarco", "local_span")
+log_dir = os.path.join(path, "rnet", "msmarco", "local_span", "log", "event")
+save_dir = os.path.join(path, "rnet", "msmarco", "local_span", "log", "model")
+answer_dir = os.path.join(path, "rnet", "msmarco", "local_span", "log", "answer")
+
+train_record_file = os.path.join(target_dir, "train.tfrecords")
+dev_record_file = os.path.join(target_dir, "dev.tfrecords")
+test_record_file = os.path.join(target_dir, "test.tfrecords")
+word_emb_file = os.path.join(target_dir, "word_emb.json")
+char_emb_file = os.path.join(target_dir, "char_emb.json")
+train_eval = os.path.join(target_dir, "train_eval.json")
+dev_eval = os.path.join(target_dir, "dev_eval.json")
+test_eval = os.path.join(target_dir, "test_eval.json")
+dev_meta = os.path.join(target_dir, "dev_meta.json")
+test_meta = os.path.join(target_dir, "test_meta.json")
+answer_file = os.path.join(answer_dir, "answer.json")
+
+if not os.path.exists(target_dir):
+	os.makedirs(target_dir)
+if not os.path.exists(log_dir):
+	os.makedirs(log_dir)
+if not os.path.exists(save_dir):
+	os.makedirs(save_dir)
+if not os.path.exists(answer_dir):
+	os.makedirs(answer_dir)
+
+flags.DEFINE_string("mode", "train", "Running mode train/debug/test")
+
+flags.DEFINE_string("target_dir", target_dir, "Target directory for out data")
+flags.DEFINE_string("log_dir", log_dir, "Directory for tf event")
+flags.DEFINE_string("save_dir", save_dir, "Directory for saving model")
+flags.DEFINE_string("train_file", train_file, "Train source file")
+flags.DEFINE_string("dev_file", dev_file, "Dev source file")
+flags.DEFINE_string("test_file", test_file, "Test source file")
+flags.DEFINE_string("glove_file", glove_file, "Glove source file")
+
+flags.DEFINE_string("train_record_file", train_record_file,
+					"Out file for train data")
+flags.DEFINE_string("dev_record_file", dev_record_file,
+					"Out file for dev data")
+flags.DEFINE_string("test_record_file", test_record_file,
+					"Out file for test data")
+flags.DEFINE_string("word_emb_file", word_emb_file,
+					"Out file for word embedding")
+flags.DEFINE_string("char_emb_file", char_emb_file,
+					"Out file for char embedding")
+flags.DEFINE_string("train_eval_file", train_eval, "Out file for train eval")
+flags.DEFINE_string("dev_eval_file", dev_eval, "Out file for dev eval")
+flags.DEFINE_string("test_eval_file", test_eval, "Out file for test eval")
+flags.DEFINE_string("dev_meta", dev_meta, "Out file for dev meta")
+flags.DEFINE_string("test_meta", test_meta, "Out file for test meta")
+flags.DEFINE_string("answer_file", answer_file, "Out file for answer")
+
+flags.DEFINE_string("gpu_id", "3", "gpu id to use for training")
+
 flags.DEFINE_integer("glove_size", int(2.2e6), "Corpus size for Glove")
 flags.DEFINE_integer("glove_dim", 300, "Embedding dimension for Glove")
 flags.DEFINE_integer("char_dim", 8, "Embedding dimension for char")
@@ -40,7 +115,7 @@ flags.DEFINE_integer("patience", 3, "Patience for learning rate decay")
 
 filename = "train.tfrecords"
 
-iterator = tf.python_io.tf_record_iterator(path=filename)
+iterator = tf.python_io.tf_record_iterator(path=train_record_file)
 config = flags.FLAGS
 
 def get_record_parser(config, is_test=False):
