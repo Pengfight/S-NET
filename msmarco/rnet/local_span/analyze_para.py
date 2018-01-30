@@ -153,7 +153,7 @@ def get_record_parser(config, is_test=False):
 		return passage_idxs, ques_idxs, passage_char_idxs, ques_char_idxs, y1, y2, qa_id
 	return parse
 json_dict = {}
-gpu_options = tf.GPUOptions(visible_device_list=config.gpu_id)
+gpu_options = tf.GPUOptions(visible_device_list="")
 sess_config = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)
 sess_config.gpu_options.allow_growth = True
 sess = tf.Session(config=sess_config)
