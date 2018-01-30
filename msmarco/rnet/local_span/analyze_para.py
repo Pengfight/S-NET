@@ -2,6 +2,7 @@ import tensorflow as tf
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 flags = tf.flags
 
@@ -160,7 +161,7 @@ sess_config = tf.ConfigProto(
 sess = tf.Session(config=sess_config)
 #sess = tf.Session(config=sess_config)
 with sess.as_default():
-	for z,i in enumerate(iterator):
+	for i in tqdm(iterator):
 		parse = get_record_parser(config)
 		a,b,c,d,e,f,g = parse(i)
 		with tf.device('/cpu:0'):
@@ -169,7 +170,6 @@ with sess.as_default():
 		a = a.eval()
 		h = np.count_nonzero(a)	
 		json_dict[int(qa_id)] = int(h)
-		print(z)
 	with open('para_metadata.json','w') as fp:
 		json.dump(concat_para_length,fp)
 #matplotlib inline
