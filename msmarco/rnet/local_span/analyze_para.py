@@ -157,7 +157,7 @@ config = tf.ConfigProto(
         device_count = {'GPU': 0}
     )
 sess = tf.Session(config=config)
-sess = tf.Session(config=sess_config)
+#sess = tf.Session(config=sess_config)
 with sess.as_default():
 	for z,i in enumerate(iterator):
 		parse = get_record_parser(config)
