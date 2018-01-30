@@ -156,7 +156,7 @@ with sess.as_default():
 		parse = get_record_parser(config)
 		a,b,c,d,e,f,g = parse(i)
 		h = tf.count_nonzero(a,dtype=tf.int32)
-		j = tf.cast(a, tf.bool)
+		j = a.get_shape().as_list()
 		a = a.eval()
 		j = j.eval()
 		h = h.eval()	
