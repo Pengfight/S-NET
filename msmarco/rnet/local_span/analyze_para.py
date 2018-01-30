@@ -158,7 +158,7 @@ sess_config = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)
 sess_config.gpu_options.allow_growth = True
 sess = tf.Session(config=sess_config)
 with sess.as_default():
-	for i in iterator:
+	for z,i in enumerate(iterator):
 		parse = get_record_parser(config)
 		a,b,c,d,e,f,g = parse(i)
 		h = tf.count_nonzero(a,dtype=tf.int32)
@@ -166,11 +166,12 @@ with sess.as_default():
 		a = a.eval()
 		h = np.count_nonzero(a)	
 		json_dict[int(qa_id)] = int(h)
+		print(z)
 	with open('para_metadata.json','w') as fp:
 		json.dump(concat_para_length,fp)
 #matplotlib inline
 #x = np.random.normal(size = 1000)
-plt.hist(list(json_dict), bins='auto')
+plt.hist(list(json_dict.values()), bins='auto')
 plt.title("Histogram with 'auto' bins")
 plt.ylabel('para length')
 plt.show()
