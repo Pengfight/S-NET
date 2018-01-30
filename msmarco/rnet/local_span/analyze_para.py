@@ -1,4 +1,6 @@
 import tensorflow as tf
+import os
+
 flags = tf.flags
 
 ome = os.path.expanduser("~")
