@@ -548,7 +548,8 @@ def build_features(config, examples, data_type, out_file, word2idx_dict, char2id
 
 		start, end = example["y1s"][-1], example["y2s"][-1]
 		y1[start], y2[end] = 1.0, 1.0
-
+		if total%config.checkpoint==0:
+			print("Processed {} examples...".format(total))
 		record = tf.train.Example(features=tf.train.Features(feature={
 								  "passage_idxs": tf.train.Feature(bytes_list=tf.train.BytesList(value=[passage_idxs.tostring()])),
 								  "ques_idxs": tf.train.Feature(bytes_list=tf.train.BytesList(value=[ques_idxs.tostring()])),
