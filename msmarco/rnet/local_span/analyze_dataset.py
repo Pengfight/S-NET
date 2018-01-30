@@ -407,8 +407,9 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 	print("{} questions with empty answer".format(empty_answers))
 	print("{} questions with low rouge-l answers without multipara".format(low_rouge_l))
 	print("{} max-para length".format(max_para_length))
-	with open('para_metadata.json','w') as fp:
-		json.dump(concat_para_length,fp)
+	if data_type == "train":
+		with open('para_metadata.json','w') as fp:
+			json.dump(concat_para_length,fp)
 	"""
 	# original implementation for comparision purposes
 	with open(filename, "r") as fh:

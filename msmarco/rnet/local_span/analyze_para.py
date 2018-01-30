@@ -127,30 +127,31 @@ def get_record_parser(config, is_test=False):
 		para_limit = config.test_para_limit if is_test else config.para_limit
 		ques_limit = config.test_ques_limit if is_test else config.ques_limit
 		char_limit = config.char_limit
-		features = tf.parse_single_example(example,
-										   features={
-											   "passage_idxs": tf.FixedLenFeature([], tf.string),
-											   "ques_idxs": tf.FixedLenFeature([], tf.string),
-											   "passage_char_idxs": tf.FixedLenFeature([], tf.string),
-											   "ques_char_idxs": tf.FixedLenFeature([], tf.string),
-											   "y1": tf.FixedLenFeature([], tf.string),
-											   "y2": tf.FixedLenFeature([], tf.string),
-											   "id": tf.FixedLenFeature([], tf.int64)
-										   })
-		passage_idxs = tf.reshape(tf.decode_raw(
-			features["passage_idxs"], tf.int32), [para_limit])
-		ques_idxs = tf.reshape(tf.decode_raw(
-			features["ques_idxs"], tf.int32), [ques_limit])
-		passage_char_idxs = tf.reshape(tf.decode_raw(
-			features["passage_char_idxs"], tf.int32), [para_limit, char_limit])
-		ques_char_idxs = tf.reshape(tf.decode_raw(
-			features["ques_char_idxs"], tf.int32), [ques_limit, char_limit])
-		y1 = tf.reshape(tf.decode_raw(
-			features["y1"], tf.float32), [para_limit])
-		y2 = tf.reshape(tf.decode_raw(
-			features["y2"], tf.float32), [para_limit])
-		qa_id = features["id"]
-		return passage_idxs, ques_idxs, passage_char_idxs, ques_char_idxs, y1, y2, qa_id
+		with tf.device('/cpu:0'):
+			features = tf.parse_single_example(example,
+											   features={
+												   "passage_idxs": tf.FixedLenFeature([], tf.string),
+												   "ques_idxs": tf.FixedLenFeature([], tf.string),
+												   "passage_char_idxs": tf.FixedLenFeature([], tf.string),
+												   "ques_char_idxs": tf.FixedLenFeature([], tf.string),
+												   "y1": tf.FixedLenFeature([], tf.string),
+												   "y2": tf.FixedLenFeature([], tf.string),
+												   "id": tf.FixedLenFeature([], tf.int64)
+											   })
+			passage_idxs = tf.reshape(tf.decode_raw(
+				features["passage_idxs"], tf.int32), [para_limit])
+			ques_idxs = tf.reshape(tf.decode_raw(
+				features["ques_idxs"], tf.int32), [ques_limit])
+			passage_char_idxs = tf.reshape(tf.decode_raw(
+				features["passage_char_idxs"], tf.int32), [para_limit, char_limit])
+			ques_char_idxs = tf.reshape(tf.decode_raw(
+				features["ques_char_idxs"], tf.int32), [ques_limit, char_limit])
+			y1 = tf.reshape(tf.decode_raw(
+				features["y1"], tf.float32), [para_limit])
+			y2 = tf.reshape(tf.decode_raw(
+				features["y2"], tf.float32), [para_limit])
+			qa_id = features["id"]
+			return passage_idxs, ques_idxs, passage_char_idxs, ques_char_idxs, y1, y2, qa_id
 	return parse
 json_dict = {}
 sess_config = tf.ConfigProto(
@@ -162,7 +163,8 @@ with sess.as_default():
 	for z,i in enumerate(iterator):
 		parse = get_record_parser(config)
 		a,b,c,d,e,f,g = parse(i)
-		h = tf.count_nonzero(a,dtype=tf.int32)
+		with tf.device('/cpu:0'):
+			h = tf.count_nonzero(a,dtype=tf.int32)
 		qa_id = g.eval()
 		a = a.eval()
 		h = np.count_nonzero(a)	
