@@ -301,10 +301,10 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 				#####################################################################
 				# individual para scoring:
 				fpr_scores = (0,0,0)
-				index = lcs_tokens(passage, answer_token)
+				index = lcs_tokens(passage_tokens, answer_token)
 				try:
 					start_idx, end_idx = index[0],index[-1]+1
-					extracted_answer = detokenizer.detokenize(passage[index[0]:index[-1]+1], return_str=True)
+					extracted_answer = detokenizer.detokenize(passage_tokens[index[0]:index[-1]+1], return_str=True)
 					detoken_ref_answer = detokenizer.detokenize(answer_token, return_str=True)
 					fpr_scores = rouge_l(normalize_answer(extracted_answer), \
 						normalize_answer(detoken_ref_answer))
