@@ -153,10 +153,10 @@ def get_record_parser(config, is_test=False):
 		return passage_idxs, ques_idxs, passage_char_idxs, ques_char_idxs, y1, y2, qa_id
 	return parse
 json_dict = {}
-config = tf.ConfigProto(
+sess_config = tf.ConfigProto(
         device_count = {'GPU': 0}
     )
-sess = tf.Session(config=config)
+sess = tf.Session(config=sess_config)
 #sess = tf.Session(config=sess_config)
 with sess.as_default():
 	for z,i in enumerate(iterator):
