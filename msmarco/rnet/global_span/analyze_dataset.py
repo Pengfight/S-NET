@@ -315,9 +315,6 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 					answer_texts = [detoken_ref_answer]
 					extracted_answer_text = extracted_answer
 					answer_start, answer_end = start_idx, end_idx
-				#####################################################################
-			################################################################
-			# individual para scoring:
 			for k in range(3):
 				if highest_rouge_l[k]<rouge_l_limit:
 					low_rouge_l[k] += 1
@@ -491,7 +488,6 @@ def get_embedding(counter, data_type, limit=-1, emb_file=None, size=None, vec_si
 					for token, idx in token2idx_dict.items()}
 	emb_mat = [idx2emb_dict[idx] for idx in range(len(idx2emb_dict))]
 	return emb_mat, token2idx_dict
-
 
 def build_features(config, examples, data_type, out_file, word2idx_dict, char2idx_dict, is_test=False):
 

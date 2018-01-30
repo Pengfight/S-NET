@@ -87,7 +87,7 @@ flags.DEFINE_string("gpu_id", "3", "gpu id to use for training")
 flags.DEFINE_integer("glove_size", int(2.2e6), "Corpus size for Glove")
 flags.DEFINE_integer("glove_dim", 300, "Embedding dimension for Glove")
 flags.DEFINE_integer("char_dim", 8, "Embedding dimension for char")
-flags.DEFINE_integer("para_limit", 400, "Limit length for paragraph")
+flags.DEFINE_integer("para_limit", 1500, "Limit length for paragraph")
 flags.DEFINE_integer("max_para", 10, "Limit length for paragraph")
 flags.DEFINE_integer("ques_limit", 50, "Limit length for question")
 flags.DEFINE_integer("test_para_limit", 1000,
