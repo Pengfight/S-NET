@@ -255,8 +255,6 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 	total = empty_answers = 0
 	low_rouge_l = np.zeros(3,dtype=np.int32)
 
-		low_rouge_l_temp = np.zeros(3,dtype=np.int32)
-
 	# para exceeding length
 	max_para_length = 0
 	for i in tqdm(range(total_lines)):
