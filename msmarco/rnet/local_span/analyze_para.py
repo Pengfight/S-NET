@@ -150,8 +150,9 @@ def get_record_parser(config, is_test=False):
 		qa_id = features["id"]
 		return passage_idxs, ques_idxs, passage_char_idxs, ques_char_idxs, y1, y2, qa_id
 	return parse
-
-for i in iterator:
-	parse = get_record_parser(config)
-	a,b,c,d,e,f,g = parse(i)
-	print(a.eval(),g.eval())
+sess = tf.Session()
+with sess.as_default():
+	for i in iterator:
+		parse = get_record_parser(config)
+		a,b,c,d,e,f,g = parse(i)
+		print(a.eval(),g.eval())
