@@ -64,7 +64,7 @@ def train(config):
 				loss_sum = tf.Summary(value=[tf.Summary.Value(
 					tag="model/loss", simple_value=loss), ])
 				writer.add_summary(loss_sum, global_step)
-			print(global_step.eval())
+			#print(global_step)
 			if global_step % config.checkpoint == 0 or global_step in [1,10,50,100,500]:
 				sess.run(tf.assign(model.is_train,
 								   tf.constant(False, dtype=tf.bool)))
