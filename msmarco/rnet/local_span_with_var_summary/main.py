@@ -63,6 +63,7 @@ def train(config):
 					tag="model/loss", simple_value=loss), ])
 				writer.add_summary(loss_sum, global_step)
 			if global_step % config.checkpoint == 0 or global_step in list(range(1,1000,20)):
+				print("checkpoint!")
 				sess.run(tf.assign(model.is_train,
 								   tf.constant(False, dtype=tf.bool)))
 				_, summ = evaluate_batch(
