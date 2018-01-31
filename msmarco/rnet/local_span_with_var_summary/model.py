@@ -99,6 +99,7 @@ class Model(object):
 			rnn = gru(num_layers=1, num_units=d, batch_size=N, input_size=qc_att.get_shape(
 			).as_list()[-1], keep_prob=config.keep_prob, is_train=self.is_train)
 			att = rnn(qc_att, seq_len=self.c_len)
+			tf.summary.histogram('vt_P',att)
 
 		with tf.variable_scope("match"):
 			self_att = dot_attention(att, att, mask=self.c_mask, hidden=d,
@@ -106,9 +107,10 @@ class Model(object):
 			rnn = gru(num_layers=1, num_units=d, batch_size=N, input_size=self_att.get_shape(
 			).as_list()[-1], keep_prob=config.keep_prob, is_train=self.is_train)
 			match = rnn(self_att, seq_len=self.c_len)
+			tf.summary.histogram('self_match',match)
 
 		with tf.variable_scope("pointer"):
-
+			
 			# r_Q:
 			init = summ(q[:, :, -2 * d:], d, mask=self.q_mask,
 						keep_prob=config.ptr_keep_prob, is_train=self.is_train)
@@ -116,6 +118,9 @@ class Model(object):
 			pointer = ptr_net(batch=N, hidden=init.get_shape().as_list(
 			)[-1], keep_prob=config.ptr_keep_prob, is_train=self.is_train)
 			logits1, logits2 = pointer(init, match, d, self.c_mask)
+			tf.summary.histogram('rQ_init',init)
+			tf.summary.histogram('pointer_logits_1',logits1)
+			tf.summary.histogram('pointer_logits_2',logits2)
 
 		with tf.variable_scope("predict"):
 			outer = tf.matmul(tf.expand_dims(tf.nn.softmax(logits1), axis=2),

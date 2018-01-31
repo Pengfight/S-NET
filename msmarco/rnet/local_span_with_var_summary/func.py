@@ -153,7 +153,6 @@ def pointer(inputs, state, hidden, mask, scope="pointer", name_scope="pointer_la
 			s1 = softmax_mask(tf.squeeze(s, [2]), mask)
 			a = tf.expand_dims(tf.nn.softmax(s1), axis=2)
 			res = tf.reduce_sum(a * inputs, axis=1)
-			tf.summary.histogram
 			return res, s1
 
 
