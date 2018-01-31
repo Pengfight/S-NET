@@ -195,7 +195,7 @@ def dot_attention(inputs, memory, mask, hidden, name_scope,
 				gate = tf.nn.sigmoid(dense(d_res, dim, use_bias=False, name_scope="gate_layer"))
 				return res * gate
 
-def dense(inputs, hidden, use_bias=True, scope="dense", name_scope):
+def dense(inputs, hidden, name_scope, use_bias=True, scope="dense"):
 	with tf.name_scope(name_scope):
 		with tf.variable_scope(scope):
 			shape = tf.shape(inputs)
