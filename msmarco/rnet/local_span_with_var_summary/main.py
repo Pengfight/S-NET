@@ -49,7 +49,8 @@ def train(config):
 		saver = tf.train.Saver(max_to_keep=config.max_checkpoint_to_keep,
 			save_relative_paths=True)
 		#print(config.save_dir_temp)
-		saver.restore(sess, tf.train.latest_checkpoint(config.save_dir_temp))
+		if config.restore_checkpoint:
+			saver.restore(sess, tf.train.latest_checkpoint(config.save_dir_temp))
 		#saver.restore(sess, tf.train.latest_checkpoint(config.save_dir))
 		train_handle = sess.run(train_iterator.string_handle())
 		dev_handle = sess.run(dev_iterator.string_handle())
