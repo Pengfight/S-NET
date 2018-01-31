@@ -41,6 +41,7 @@ class Model(object):
 			tf.cast(tf.cast(self.qh, tf.bool), tf.int32), axis=2), [-1])
 
 		self.ready()
+		self.merged = tf.summary.merge_all()
 
 		if trainable:
 			self.lr = tf.get_variable(
@@ -110,7 +111,7 @@ class Model(object):
 			tf.summary.histogram('self_match',match)
 
 		with tf.variable_scope("pointer"):
-			
+
 			# r_Q:
 			init = summ(q[:, :, -2 * d:], d, mask=self.q_mask,
 						keep_prob=config.ptr_keep_prob, is_train=self.is_train)

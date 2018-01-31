@@ -58,12 +58,13 @@ def train(config):
 		print("Started training")
 		for _ in tqdm(range(1, config.num_steps + 1)):
 			global_step = sess.run(model.global_step) + 1
-			loss, train_op = sess.run([model.loss, model.train_op], feed_dict={
+			summary, loss, train_op = sess.run([model.merged, model.loss, model.train_op], feed_dict={
 									  handle: train_handle})
 			if global_step % config.period == 0:
 				loss_sum = tf.Summary(value=[tf.Summary.Value(
 					tag="model/loss", simple_value=loss), ])
 				writer.add_summary(loss_sum, global_step)
+				writer.add_summary(summary, global_step)
 			#print(global_step)
 			if global_step % config.checkpoint == 0 or global_step in [1,10,50,100,500]:
 				sess.run(tf.assign(model.is_train,
