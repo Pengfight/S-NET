@@ -205,7 +205,7 @@ def dense(inputs, hidden, name_scope, use_bias=True, scope="dense"):
 			flat_inputs = tf.reshape(inputs, [-1, dim])
 			with tf.name_scope('weights'):
 				W = tf.get_variable("W", [dim, hidden])
-				variable_summaries(weights)
+				variable_summaries(W)
 			res = tf.matmul(flat_inputs, W)
 			if use_bias:
 				b = tf.get_variable(
