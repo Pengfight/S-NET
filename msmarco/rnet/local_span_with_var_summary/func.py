@@ -118,14 +118,13 @@ class ptr_net:
 		with tf.variable_scope(self.scope):
 			d_match = dropout(match, keep_prob=self.keep_prob,
 							  is_train=self.is_train)
-			inp, logits1 = pointer(d_match, init * self.dropout_mask, d, mask)
+			inp, logits1 = pointer(d_match, init * self.dropout_mask, d, mask, name_scope="ptr_net_start")
 			d_inp = dropout(inp, keep_prob=self.keep_prob,
 							is_train=self.is_train)
 			_, state = self.gru(d_inp, init)
 			tf.get_variable_scope().reuse_variables()
-			_, logits2 = pointer(d_match, state * self.dropout_mask, d, mask)
+			_, logits2 = pointer(d_match, state * self.dropout_mask, d, mask, name_scope="ptr_net_end")
 			return logits1, logits2
-
 
 def dropout(args, keep_prob, is_train, mode="recurrent"):
 	if keep_prob < 1.0:
@@ -141,74 +140,79 @@ def dropout(args, keep_prob, is_train, mode="recurrent"):
 			args, keep_prob, noise_shape=noise_shape) * scale, lambda: args)
 	return args
 
-
 def softmax_mask(val, mask):
 	return -INF * (1 - tf.cast(mask, tf.float32)) + val
 
-
-def pointer(inputs, state, hidden, mask, scope="pointer"):
-	with tf.variable_scope(scope):
-		u = tf.concat([tf.tile(tf.expand_dims(state, axis=1), [
-			1, tf.shape(inputs)[1], 1]), inputs], axis=2)
-		s0 = tf.nn.tanh(dense(u, hidden, use_bias=False, scope="s0"))
-		s = dense(s0, 1, use_bias=False, scope="s")
-		s1 = softmax_mask(tf.squeeze(s, [2]), mask)
-		a = tf.expand_dims(tf.nn.softmax(s1), axis=2)
-		res = tf.reduce_sum(a * inputs, axis=1)
-		return res, s1
+def pointer(inputs, state, hidden, mask, scope="pointer", name_scope="pointer_layer"):
+	with tf.name_scope(name_scope):
+		with tf.variable_scope(scope):
+			u = tf.concat([tf.tile(tf.expand_dims(state, axis=1), [
+				1, tf.shape(inputs)[1], 1]), inputs], axis=2)
+			s0 = tf.nn.tanh(dense(u, hidden, use_bias=False, scope="s0", name_scope="s0_layer"))
+			s = dense(s0, 1, use_bias=False, scope="s", name_scope="s_layer")
+			s1 = softmax_mask(tf.squeeze(s, [2]), mask)
+			a = tf.expand_dims(tf.nn.softmax(s1), axis=2)
+			res = tf.reduce_sum(a * inputs, axis=1)
+			tf.summary.histogram
+			return res, s1
 
 
 def summ(memory, hidden, mask, keep_prob=1.0, is_train=None, scope="summ"):
 	with tf.variable_scope(scope):
 		d_memory = dropout(memory, keep_prob=keep_prob, is_train=is_train)
-		s0 = tf.nn.tanh(dense(d_memory, hidden, scope="s0"))
-		s = dense(s0, 1, use_bias=False, scope="s")
+		s0 = tf.nn.tanh(dense(d_memory, hidden, scope="s0", name_scope="summ_layer_s0"))
+		s = dense(s0, 1, use_bias=False, scope="s", name_scope="summ_layer_s")
 		s1 = softmax_mask(tf.squeeze(s, [2]), mask)
 		a = tf.expand_dims(tf.nn.softmax(s1), axis=2)
 		res = tf.reduce_sum(a * memory, axis=1)
 		return res
 
 
-def dot_attention(inputs, memory, mask, hidden, keep_prob=1.0, is_train=None, scope="dot_attention"):
-	with tf.variable_scope(scope):
+def dot_attention(inputs, memory, mask, hidden, keep_prob=1.0, is_train=None, scope="dot_attention",
+				  name_scope):
+	with tf.name_scope(scope):
+		with tf.variable_scope(scope):
 
-		d_inputs = dropout(inputs, keep_prob=keep_prob, is_train=is_train)
-		d_memory = dropout(memory, keep_prob=keep_prob, is_train=is_train)
-		JX = tf.shape(inputs)[1]
+			d_inputs = dropout(inputs, keep_prob=keep_prob, is_train=is_train)
+			d_memory = dropout(memory, keep_prob=keep_prob, is_train=is_train)
+			JX = tf.shape(inputs)[1]
 
-		with tf.variable_scope("attention"):
-			inputs_ = tf.nn.relu(
-				dense(d_inputs, hidden, use_bias=False, scope="inputs"))
-			memory_ = tf.nn.relu(
-				dense(d_memory, hidden, use_bias=False, scope="memory"))
-			outputs = tf.matmul(inputs_, tf.transpose(
-				memory_, [0, 2, 1])) / (hidden ** 0.5)
-			mask = tf.tile(tf.expand_dims(mask, axis=1), [1, JX, 1])
-			logits = tf.nn.softmax(softmax_mask(outputs, mask))
-			outputs = tf.matmul(logits, memory)
-			res = tf.concat([inputs, outputs], axis=2)
+			with tf.variable_scope("attention"):
+				inputs_ = tf.nn.relu(
+					dense(d_inputs, hidden, use_bias=False, scope="inputs", name_scope="input_layer"))
+				memory_ = tf.nn.relu(
+					dense(d_memory, hidden, use_bias=False, scope="memory", name_scope="memory_layer"))
+				outputs = tf.matmul(inputs_, tf.transpose(
+					memory_, [0, 2, 1])) / (hidden ** 0.5)
+				mask = tf.tile(tf.expand_dims(mask, axis=1), [1, JX, 1])
+				logits = tf.nn.softmax(softmax_mask(outputs, mask))
+				outputs = tf.matmul(logits, memory)
+				res = tf.concat([inputs, outputs], axis=2)
 
-		with tf.variable_scope("gate"):
-			dim = res.get_shape().as_list()[-1]
-			d_res = dropout(res, keep_prob=keep_prob, is_train=is_train)
-			gate = tf.nn.sigmoid(dense(d_res, dim, use_bias=False))
-			return res * gate
+			with tf.variable_scope("gate"):
+				dim = res.get_shape().as_list()[-1]
+				d_res = dropout(res, keep_prob=keep_prob, is_train=is_train)
+				gate = tf.nn.sigmoid(dense(d_res, dim, use_bias=False, name_scope="gate_layer"))
+				return res * gate
 
-def dense(inputs, hidden, use_bias=True, scope="dense"):
-	with tf.variable_scope(scope):
-		shape = tf.shape(inputs)
-		dim = inputs.get_shape().as_list()[-1]
-		out_shape = [shape[idx] for idx in range(
-			len(inputs.get_shape().as_list()) - 1)] + [hidden]
-		flat_inputs = tf.reshape(inputs, [-1, dim])
-		W = tf.get_variable("W", [dim, hidden])
-		res = tf.matmul(flat_inputs, W)
-		if use_bias:
-			b = tf.get_variable(
-				"b", [hidden], initializer=tf.constant_initializer(0.))
-			res = tf.nn.bias_add(res, b)
-		res = tf.reshape(res, out_shape)
-		return res
+def dense(inputs, hidden, use_bias=True, scope="dense", name_scope):
+	with tf.name_scope(name_scope):
+		with tf.variable_scope(scope):
+			shape = tf.shape(inputs)
+			dim = inputs.get_shape().as_list()[-1]
+			out_shape = [shape[idx] for idx in range(
+				len(inputs.get_shape().as_list()) - 1)] + [hidden]
+			flat_inputs = tf.reshape(inputs, [-1, dim])
+			with tf.name_scope('weights'):
+				W = tf.get_variable("W", [dim, hidden])
+				variable_summaries(weights)
+			res = tf.matmul(flat_inputs, W)
+			if use_bias:
+				b = tf.get_variable(
+					"b", [hidden], initializer=tf.constant_initializer(0.))
+				res = tf.nn.bias_add(res, b)
+			res = tf.reshape(res, out_shape)
+			return res
 
 def variable_summaries(var):
 	"""Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
