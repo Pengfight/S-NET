@@ -111,6 +111,7 @@ flags.DEFINE_integer("rouge_metric", 0, "# 0 = f, 1 = p, 2 = r")
 flags.DEFINE_integer("batch_size", 8, "Batch size") # 64
 flags.DEFINE_integer("num_steps", 50000, "Number of steps")
 flags.DEFINE_integer("checkpoint", 1000, "checkpoint to save and evaluate the model")
+flags.DEFINE_integer("max_checkpoint_to_keep", 5, "checkpoint to save and evaluate the model")
 flags.DEFINE_integer("period", 100, "period to save batch loss")
 flags.DEFINE_integer("val_num_batches", 150, "Number of batches to evaluate the model")
 flags.DEFINE_float("init_lr", 0.5, "Initial learning rate for Adadelta")
