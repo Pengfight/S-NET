@@ -168,7 +168,7 @@ def summ(memory, hidden, mask, keep_prob=1.0, is_train=None, scope="summ"):
 		return res
 
 
-def dot_attention(inputs, memory, mask, hidden, name_scope name_scope,
+def dot_attention(inputs, memory, mask, hidden, name_scope,
 				  keep_prob=1.0, is_train=None, scope="dot_attention"):
 	with tf.name_scope(scope):
 		with tf.variable_scope(scope):
