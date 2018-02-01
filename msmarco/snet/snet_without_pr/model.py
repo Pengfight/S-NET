@@ -34,7 +34,7 @@ class Model(object):
 			self.c_maxlen = config.para_limit
 			###
 			self.q_maxlen = tf.reduce_max(self.q_len)
-			self.c = tf.slice(self.c_, [0, 0], [N, self.c_maxlen])
+			self.c = tf.slice(self.c_, [0, 0], [N, self.c_maxlen*config.max_para])
 			self.q = tf.slice(self.q, [0, 0], [N, self.q_maxlen])
 			self.c_mask = tf.slice(self.c_mask, [0, 0], [N, self.c_maxlen])
 			self.q_mask = tf.slice(self.q_mask, [0, 0], [N, self.q_maxlen])
