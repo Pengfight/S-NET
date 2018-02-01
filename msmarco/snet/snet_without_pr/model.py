@@ -45,7 +45,8 @@ class Model(object):
 			# passage ranking
 			#print(self.ch_pr.get_shape())
 			#print(self.c_pr.get_shape())
-			self.c_pr = tf.slice(self.c_mask, [0, 0], [N, config.max_para*config.para_limit])
+			self.c_pr = tf.slice(self.c_pr, [0, 0], [N, config.max_para*config.para_limit])
+			self.c_mask_multipara = tf.slice(self.c_mask, [0, 0], [N, config.max_para*config.para_limit])
 			self.ch_pr = tf.slice(self.ch_pr, [0, 0, 0], [N, config.max_para*config.para_limit, CL])
 		else:
 			self.c_maxlen, self.q_maxlen = config.para_limit, config.ques_limit
@@ -237,7 +238,7 @@ class Model(object):
 			print("rQ:",init.get_shape().as_list())
 			pointer = ptr_net(batch=N, hidden=init.get_shape().as_list(
 			)[-1], keep_prob=config.ptr_keep_prob, is_train=self.is_train)
-			logits1, logits2 = pointer(init, att_vP, d, self.c_pr)
+			logits1, logits2 = pointer(init, att_vP, d, self.c_mask_multipara)
 			tf.summary.histogram('rQ_init',init)
 
 		with tf.variable_scope("predict"):
