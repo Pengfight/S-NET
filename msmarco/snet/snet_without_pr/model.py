@@ -90,7 +90,7 @@ class Model(object):
 		for i in range(config.max_para):
 			print(i)
 			if i==0:
-				with tf.variable_scope("emb")
+				with tf.variable_scope("emb"):
 					with tf.variable_scope("char"):
 						#CL = tf.Print(CL,[CL],message="CL:")
 						#PL = tf.Print(PL,[PL],message="PL:")
@@ -127,7 +127,7 @@ class Model(object):
 						qh_emb = tf.reshape(qh_emb, [N, QL, 2 * dg])
 						ch_emb = tf.reshape(ch_emb, [N, PL, 2 * dg])
 						#ch_emb = tf.Print(ch_emb,[ch_emb],message="ch_emb")
-					with tf.name_scope("word"+str(i)):
+					with tf.name_scope("word"):
 						c_emb = tf.nn.embedding_lookup(self.word_mat, self.c_pr[:,i*400:(i+1)*400])
 						q_emb = tf.nn.embedding_lookup(self.word_mat, self.q)
 
@@ -171,7 +171,7 @@ class Model(object):
 						qh_emb = tf.reshape(qh_emb, [N, QL, 2 * dg])
 						ch_emb = tf.reshape(ch_emb, [N, PL, 2 * dg])
 						#ch_emb = tf.Print(ch_emb,[ch_emb],message="ch_emb")
-					with tf.name_scope("word"+str(i)):
+					with tf.name_scope("word"):
 						c_emb = tf.nn.embedding_lookup(self.word_mat, self.c_pr[:,i*400:(i+1)*400])
 						q_emb = tf.nn.embedding_lookup(self.word_mat, self.q)
 
@@ -260,7 +260,7 @@ class Model(object):
 			gi = None
 			for i in range(config.max_para):
 				# Passage ranking
-				with tf.variable_scope("passage-ranking-attention"+str(i)):
+				with tf.variable_scope("passage-ranking-attention"):
 
 					#att_vP = tf.Print(att_vP,[att_vP.get_shape()],message="att_vP:")
 					vj_P = att_vP[:,i*400:(i+1)*400,:]
@@ -270,8 +270,8 @@ class Model(object):
 					#r_P = tf.Print(r_P,[r_P],message="r_p")
 					# Wg
 					concatenate = tf.concat([init,r_P],axis=1)
-					g = tf.nn.tanh(dense(concatenate, hidden=d, use_bias=False, scope="g"+str(i)))
-					g_ = dense(g, 1, use_bias=False, scope="g_"+str(i))
+					g = tf.nn.tanh(dense(concatenate, hidden=d, use_bias=False, scope="g"+))
+					g_ = dense(g, 1, use_bias=False, scope="g_")
 					#g = tf.Print(g,[g],message="g")
 					if i==0:
 						gi = tf.reshape(g_,[N,1])
