@@ -86,72 +86,139 @@ class Model(object):
 		gi = []
 		att_vP = []
 		
+
 		for i in range(config.max_para):
 			print(i)
-			with tf.variable_scope("emb"):
-				with tf.variable_scope("char"):
-					#CL = tf.Print(CL,[CL],message="CL:")
-					#PL = tf.Print(PL,[PL],message="PL:")
-					#self.ch_pr = tf.Print(self.ch_pr,[self.ch_pr.get_shape()],message="ch_pr:")
-					self.ch_pr_ = self.ch_pr[:,i*400:(i+1)*400,:]
-					print(self.ch_pr_.get_shape())
-					#self.c_pr = tf.reshape(self.c_pr, [N, 12, PL])
-					#print(self.ch.get_shape())
-					#print(self.ch_pr.get_shape())
-					#print(self.c.get_shape())
-					#print(self.c_pr.get_shape())
-					#self.ch_pr = tf.Print(self.ch_pr,[self.ch_pr[:,2:,:]],message="ch_pr")
-					ch_emb = tf.reshape(tf.nn.embedding_lookup(\
-						self.char_mat, self.ch_pr_), [N * PL, CL, dc])
-					#	self.char_mat, self.ch), [N * PL, CL, dc])
-					qh_emb = tf.reshape(tf.nn.embedding_lookup(
-						self.char_mat, self.qh), [N * QL, CL, dc])
-					ch_emb = dropout(
-						ch_emb, keep_prob=config.keep_prob, is_train=self.is_train)
-					#ch_emb = tf.Print(ch_emb,[ch_emb],message="ch_emb")
-					#qh_emb = tf.Print(qh_emb,[qh_emb],message="qh_emb")
-					qh_emb = dropout(
-						qh_emb, keep_prob=config.keep_prob, is_train=self.is_train)
-					cell_fw = tf.contrib.rnn.GRUCell(dg, reuse=True)
-					cell_bw = tf.contrib.rnn.GRUCell(dg, reuse=True)
-					_, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(
-						cell_fw, cell_bw, ch_emb, self.ch_len, dtype=tf.float32)
-					ch_emb = tf.concat([state_fw, state_bw], axis=1)
-					_, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(
-						cell_fw, cell_bw, qh_emb, self.qh_len, dtype=tf.float32)
-					#state_fw = tf.Print(state_fw,[state_fw],message="state_fw")
-					#state_bw = tf.Print(state_bw,[state_bw],message="state_bw")
-					qh_emb = tf.concat([state_fw, state_bw], axis=1)
-					qh_emb = tf.reshape(qh_emb, [N, QL, 2 * dg])
-					ch_emb = tf.reshape(ch_emb, [N, PL, 2 * dg])
-					#ch_emb = tf.Print(ch_emb,[ch_emb],message="ch_emb")
-				with tf.name_scope("word"+str(i)):
-					c_emb = tf.nn.embedding_lookup(self.word_mat, self.c_pr[:,i*400:(i+1)*400])
-					q_emb = tf.nn.embedding_lookup(self.word_mat, self.q)
+			if i==0:
+				with tf.variable_scope("emb")
+					with tf.variable_scope("char"):
+						#CL = tf.Print(CL,[CL],message="CL:")
+						#PL = tf.Print(PL,[PL],message="PL:")
+						#self.ch_pr = tf.Print(self.ch_pr,[self.ch_pr.get_shape()],message="ch_pr:")
+						self.ch_pr_ = self.ch_pr[:,i*400:(i+1)*400,:]
+						print(self.ch_pr_.get_shape())
+						#self.c_pr = tf.reshape(self.c_pr, [N, 12, PL])
+						#print(self.ch.get_shape())
+						#print(self.ch_pr.get_shape())
+						#print(self.c.get_shape())
+						#print(self.c_pr.get_shape())
+						#self.ch_pr = tf.Print(self.ch_pr,[self.ch_pr[:,2:,:]],message="ch_pr")
+						ch_emb = tf.reshape(tf.nn.embedding_lookup(\
+							self.char_mat, self.ch_pr_), [N * PL, CL, dc])
+						#	self.char_mat, self.ch), [N * PL, CL, dc])
+						qh_emb = tf.reshape(tf.nn.embedding_lookup(
+							self.char_mat, self.qh), [N * QL, CL, dc])
+						ch_emb = dropout(
+							ch_emb, keep_prob=config.keep_prob, is_train=self.is_train)
+						#ch_emb = tf.Print(ch_emb,[ch_emb],message="ch_emb")
+						#qh_emb = tf.Print(qh_emb,[qh_emb],message="qh_emb")
+						qh_emb = dropout(
+							qh_emb, keep_prob=config.keep_prob, is_train=self.is_train)
+						cell_fw = tf.contrib.rnn.GRUCell(dg)
+						cell_bw = tf.contrib.rnn.GRUCell(dg)
+						_, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(
+							cell_fw, cell_bw, ch_emb, self.ch_len, dtype=tf.float32)
+						ch_emb = tf.concat([state_fw, state_bw], axis=1)
+						_, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(
+							cell_fw, cell_bw, qh_emb, self.qh_len, dtype=tf.float32)
+						#state_fw = tf.Print(state_fw,[state_fw],message="state_fw")
+						#state_bw = tf.Print(state_bw,[state_bw],message="state_bw")
+						qh_emb = tf.concat([state_fw, state_bw], axis=1)
+						qh_emb = tf.reshape(qh_emb, [N, QL, 2 * dg])
+						ch_emb = tf.reshape(ch_emb, [N, PL, 2 * dg])
+						#ch_emb = tf.Print(ch_emb,[ch_emb],message="ch_emb")
+					with tf.name_scope("word"+str(i)):
+						c_emb = tf.nn.embedding_lookup(self.word_mat, self.c_pr[:,i*400:(i+1)*400])
+						q_emb = tf.nn.embedding_lookup(self.word_mat, self.q)
 
-				c_emb = tf.concat([c_emb, ch_emb], axis=2)
-				q_emb = tf.concat([q_emb, qh_emb], axis=2)
+					c_emb = tf.concat([c_emb, ch_emb], axis=2)
+					q_emb = tf.concat([q_emb, qh_emb], axis=2)
+			else:
+				with tf.variable_scope("emb", reuse=True):
+					with tf.variable_scope("char", reuse=True):
+						#CL = tf.Print(CL,[CL],message="CL:")
+						#PL = tf.Print(PL,[PL],message="PL:")
+						#self.ch_pr = tf.Print(self.ch_pr,[self.ch_pr.get_shape()],message="ch_pr:")
+						self.ch_pr_ = self.ch_pr[:,i*400:(i+1)*400,:]
+						print(self.ch_pr_.get_shape())
+						#self.c_pr = tf.reshape(self.c_pr, [N, 12, PL])
+						#print(self.ch.get_shape())
+						#print(self.ch_pr.get_shape())
+						#print(self.c.get_shape())
+						#print(self.c_pr.get_shape())
+						#self.ch_pr = tf.Print(self.ch_pr,[self.ch_pr[:,2:,:]],message="ch_pr")
+						ch_emb = tf.reshape(tf.nn.embedding_lookup(\
+							self.char_mat, self.ch_pr_), [N * PL, CL, dc])
+						#	self.char_mat, self.ch), [N * PL, CL, dc])
+						qh_emb = tf.reshape(tf.nn.embedding_lookup(
+							self.char_mat, self.qh), [N * QL, CL, dc])
+						ch_emb = dropout(
+							ch_emb, keep_prob=config.keep_prob, is_train=self.is_train)
+						#ch_emb = tf.Print(ch_emb,[ch_emb],message="ch_emb")
+						#qh_emb = tf.Print(qh_emb,[qh_emb],message="qh_emb")
+						qh_emb = dropout(
+							qh_emb, keep_prob=config.keep_prob, is_train=self.is_train)
+						cell_fw = tf.contrib.rnn.GRUCell(dg)
+						cell_bw = tf.contrib.rnn.GRUCell(dg)
+						_, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(
+							cell_fw, cell_bw, ch_emb, self.ch_len, dtype=tf.float32)
+						ch_emb = tf.concat([state_fw, state_bw], axis=1)
+						_, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(
+							cell_fw, cell_bw, qh_emb, self.qh_len, dtype=tf.float32)
+						#state_fw = tf.Print(state_fw,[state_fw],message="state_fw")
+						#state_bw = tf.Print(state_bw,[state_bw],message="state_bw")
+						qh_emb = tf.concat([state_fw, state_bw], axis=1)
+						qh_emb = tf.reshape(qh_emb, [N, QL, 2 * dg])
+						ch_emb = tf.reshape(ch_emb, [N, PL, 2 * dg])
+						#ch_emb = tf.Print(ch_emb,[ch_emb],message="ch_emb")
+					with tf.name_scope("word"+str(i)):
+						c_emb = tf.nn.embedding_lookup(self.word_mat, self.c_pr[:,i*400:(i+1)*400])
+						q_emb = tf.nn.embedding_lookup(self.word_mat, self.q)
 
-			with tf.variable_scope("encoding"):
-				rnn = gru(num_layers=3, num_units=d, batch_size=N, input_size=c_emb.get_shape(
-				).as_list()[-1], keep_prob=config.keep_prob, is_train=self.is_train)
-				c = rnn(c_emb, seq_len=self.c_len)
-				q = rnn(q_emb, seq_len=self.q_len)
-
-			with tf.variable_scope("attention"):
-				qc_att = dot_attention(c, q, mask=self.q_mask, hidden=d,
-									   keep_prob=config.keep_prob, is_train=self.is_train)
-				rnn = gru(num_layers=1, num_units=d, batch_size=N, input_size=qc_att.get_shape(
-				).as_list()[-1], keep_prob=config.keep_prob, is_train=self.is_train)
-				att = rnn(qc_att, seq_len=self.c_len)
-				# att is the v_P
-				if i==0:
-					att_vP = att
-				else:
-					att_vP = tf.concat([att_vP, att], axis=1)
-				#att = tf.Print(att,[att],message="att:")
-				print("att:",att.get_shape().as_list())
-				print("att_vP:",att_vP.get_shape().as_list())
+					c_emb = tf.concat([c_emb, ch_emb], axis=2)
+					q_emb = tf.concat([q_emb, qh_emb], axis=2)
+			if i==0:
+				with tf.variable_scope("encoding"):
+					rnn = gru(num_layers=3, num_units=d, batch_size=N, input_size=c_emb.get_shape(
+					).as_list()[-1], keep_prob=config.keep_prob, is_train=self.is_train)
+					c = rnn(c_emb, seq_len=self.c_len)
+					q = rnn(q_emb, seq_len=self.q_len)
+			else:
+				with tf.variable_scope("encoding", reuse=True):
+					rnn = gru(num_layers=3, num_units=d, batch_size=N, input_size=c_emb.get_shape(
+					).as_list()[-1], keep_prob=config.keep_prob, is_train=self.is_train)
+					c = rnn(c_emb, seq_len=self.c_len)
+					q = rnn(q_emb, seq_len=self.q_len)
+			if i==0:
+				with tf.variable_scope("attention"):
+					qc_att = dot_attention(c, q, mask=self.q_mask, hidden=d,
+										   keep_prob=config.keep_prob, is_train=self.is_train)
+					rnn = gru(num_layers=1, num_units=d, batch_size=N, input_size=qc_att.get_shape(
+					).as_list()[-1], keep_prob=config.keep_prob, is_train=self.is_train)
+					att = rnn(qc_att, seq_len=self.c_len)
+					# att is the v_P
+					if i==0:
+						att_vP = att
+					else:
+						att_vP = tf.concat([att_vP, att], axis=1)
+					#att = tf.Print(att,[att],message="att:")
+					print("att:",att.get_shape().as_list())
+					print("att_vP:",att_vP.get_shape().as_list())
+			else:
+				with tf.variable_scope("attention",reuse=True):
+					qc_att = dot_attention(c, q, mask=self.q_mask, hidden=d,
+										   keep_prob=config.keep_prob, is_train=self.is_train)
+					rnn = gru(num_layers=1, num_units=d, batch_size=N, input_size=qc_att.get_shape(
+					).as_list()[-1], keep_prob=config.keep_prob, is_train=self.is_train)
+					att = rnn(qc_att, seq_len=self.c_len)
+					# att is the v_P
+					if i==0:
+						att_vP = att
+					else:
+						att_vP = tf.concat([att_vP, att], axis=1)
+					#att = tf.Print(att,[att],message="att:")
+					print("att:",att.get_shape().as_list())
+					print("att_vP:",att_vP.get_shape().as_list())
 			#att_vP = tf.Print(att_vP,[tf.shape(att_vP)],message="att_vP:")
 			"""
 			with tf.variable_scope("match"):
