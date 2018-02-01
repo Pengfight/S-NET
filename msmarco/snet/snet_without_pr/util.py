@@ -112,16 +112,16 @@ def convert_tokens(eval_file, qa_id, pp1, pp2):
 		spans_l = len(spans)
 		print(p1,p2)
 		if p1 >= len(spans) or p2 >= len(spans):
-			outlier = True
-			p1 = p1%spans_l
-			p2 = p1%spans_l
+			#outlier = True
+			#p1 = p1%spans_l
+			#p2 = p1%spans_l
 			print("outlier")
 			#continue
 			# it will return {},{},True
 			#return answer_dict,remapped_dict,outlier
 		#try:
-		start_idx = spans[p1][0]
-		end_idx = spans[p2][1]
+		#start_idx = spans[p1][0]
+		#end_idx = spans[p2][1]
 		"""except:
 			print(passage_concat)
 			print(spans)
