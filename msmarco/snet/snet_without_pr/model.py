@@ -7,9 +7,9 @@ class Model(object):
 		self.config = config
 		self.global_step = tf.get_variable('global_step', shape=[], dtype=tf.int32,
 										   initializer=tf.constant_initializer(0), trainable=False)
-		self.c, self.q, self.ch, self.qh, self.y1, self.y2, self.qa_id, \
+		self.c_, self.q, self.ch, self.qh, self.y1, self.y2, self.qa_id, \
 			self.c_pr, self.ch_pr, self.pr, self.y1_pr, self.y2_pr = batch.get_next()
-		self.c_temp = self.c
+	
 		self.is_train = tf.get_variable(
 			"is_train", shape=[], dtype=tf.bool, trainable=False)
 		self.word_mat = tf.get_variable("word_mat", initializer=tf.constant(
@@ -17,7 +17,7 @@ class Model(object):
 		self.char_mat = tf.get_variable(
 			"char_mat", char_mat.shape, dtype=tf.float32)
 
-		self.c_mask = tf.cast(self.c, tf.bool)
+		self.c_mask = tf.cast(self.c_, tf.bool)
 		self.q_mask = tf.cast(self.q, tf.bool)
 		
 		# passage ranking line:
@@ -34,7 +34,7 @@ class Model(object):
 			self.c_maxlen = config.para_limit
 			###
 			self.q_maxlen = tf.reduce_max(self.q_len)
-			self.c = tf.slice(self.c, [0, 0], [N, self.c_maxlen])
+			self.c = tf.slice(self.c_, [0, 0], [N, self.c_maxlen])
 			self.q = tf.slice(self.q, [0, 0], [N, self.q_maxlen])
 			self.c_mask = tf.slice(self.c_mask, [0, 0], [N, self.c_maxlen])
 			self.q_mask = tf.slice(self.q_mask, [0, 0], [N, self.q_maxlen])
@@ -48,9 +48,10 @@ class Model(object):
 			#print(self.c_pr.get_shape())
 			self.c_pr = tf.slice(self.c_pr, [0, 0], [N, config.max_para*config.para_limit])
 			###
-			self.c_mask_temp = tf.cast(self.c_temp, tf.bool)
-			self.c_temp = tf.Print(self.c_temp,[self.c.get_shape().as_list()],message="c_shape:")
-			self.c_mask_multipara = tf.slice(self.c_mask_temp, [0, 0], [N, config.max_para*config.para_limit])
+			self.c_mask_temp = tf.cast(self.c_, tf.bool)
+			self.c_mask_temp = tf.Print(self.c_mask_temp,[self.c_mask_temp.get_shape().as_list()],message="c_mask_temp:")
+			self.c_mask_multipara = tf.slice(self.c_mask_temp, [0, 0],
+				[N, config.max_para*config.para_limit])
 			###
 			self.ch_pr = tf.slice(self.ch_pr, [0, 0, 0], [N, config.max_para*config.para_limit, CL])
 		else:
