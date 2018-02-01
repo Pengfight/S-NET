@@ -105,7 +105,7 @@ def convert_tokens(eval_file, qa_id, pp1, pp2):
 	remapped_dict = {}
 	outlier = False
 	for qid, p1, p2 in zip(qa_id, pp1, pp2):
-		passage_concat = eval_file[str(qid)]["passage_concat"]
+		passage_pr_concat = eval_file[str(qid)]["passage_pr_concat"]
 		spans = eval_file[str(qid)]["spans"]
 		uuid = eval_file[str(qid)]["uuid"]
 		spans_l = len(spans)
@@ -129,8 +129,8 @@ def convert_tokens(eval_file, qa_id, pp1, pp2):
 			import sys
 			sys.exit()
 		"""
-		answer_dict[str(qid)] = passage_concat[start_idx: end_idx]
-		remapped_dict[uuid] = passage_concat[start_idx: end_idx]
+		answer_dict[str(qid)] = passage_pr_concat[start_idx: end_idx]
+		remapped_dict[uuid] = passage_pr_concat[start_idx: end_idx]
 	return answer_dict, remapped_dict, outlier
 
 def rouge_l(evaluated_ngrams, reference_ngrams):
