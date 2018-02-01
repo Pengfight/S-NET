@@ -221,7 +221,7 @@ def rouge_l(evaluated_ngrams, reference_ngrams):
 	# return overlapping_count / reference_count
 	return f1_score, precision, recall
 
-def process_file(max_para_count, filename, data_type, word_counter, char_counter, is_line_limit, rouge_metric):
+def process_file(config, max_para_count, filename, data_type, word_counter, char_counter, is_line_limit, rouge_metric):
 	detokenizer = MosesDetokenizer()
 	print("Generating {} examples...".format(data_type))
 	examples = []
@@ -270,6 +270,8 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 		extracted_answer_text = ''
 		passage_concat = ''
 		passage_pr_tokens = ['--NULL--']*max_para_count
+		passage_pr_single_token = [['--NULL--']*config.para_limit]*max_para_count
+
 		passage_rank = [0]*max_para_count
 		passage_rank_index = 0
 
@@ -284,7 +286,11 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 			passage_text = passage['passage_text'].replace(
 				"''", '" ').replace("``", '" ').lower()
 			passage_concat += " " + passage_text
-			passage_pr_tokens[j] = word_tokenize(" " + passage_text)
+			passage_token = word_tokenize(" " + passage_text)
+			passage_pr_tokens[j] = passage_token
+
+			passage_pr_single_token[j][:len(passage_token)] = passage_token
+
 			length = len(passage_pr_tokens[j])
 			if length>400:
 				para_length_exceeded += 1
@@ -412,7 +418,7 @@ def process_file(max_para_count, filename, data_type, word_counter, char_counter
 				   "passage_pr_chars": passage_pr_chars}
 		examples.append(example)
 		eval_examples[str(total)] = {
-			"passage_concat": passage_concat, "spans": spans, "answers": answer_texts, "uuid": source["query_id"],
+			"passage_concat": passage_concat, "passage_pr_concat": passage_pr_single_token, "spans": spans, "answers": answer_texts, "uuid": source["query_id"],
 			"passage_rank": passage_rank}
 		line = fh.readline()
 		if total%1000 == 0:
@@ -626,13 +632,13 @@ def save(filename, obj, message=None):
 
 def prepro_(config):
 	word_counter, char_counter = Counter(), Counter()
-	train_examples, train_eval = process_file(
+	train_examples, train_eval = process_file(config,
 		config.max_para, config.train_file, "train", word_counter, char_counter, 
 		config.line_limit_prepro, config.rouge_metric)
-	dev_examples, dev_eval = process_file(
+	dev_examples, dev_eval = process_file(config,
 		config.max_para, config.dev_file, "dev", word_counter, char_counter, 
 		config.line_limit_prepro, config.rouge_metric)
-	test_examples, test_eval = process_file(
+	test_examples, test_eval = process_file(config
 		config.max_para, config.test_file, "test", word_counter, char_counter,
 		config.line_limit_prepro, config.rouge_metric)
 	word_emb_mat, word2idx_dict = get_embedding(
