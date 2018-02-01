@@ -104,20 +104,23 @@ class native_gru:
 		return res
 
 class pr_attention:
-	def __init__(self, batch, hidden, keep_prob=1.0, is_train=None, scope="pr_attention"):
+	def __init__(self, batch, hidden, keep_prob=1.0, is_train=None, scope="pr_attention",
+				name_scope="pr_attention_layer"):
 		self.batch = batch
 		self.scope = scope
+		self.name_scope = name_scope
 		self.keep_prob = keep_prob
 		self.is_train = is_train
 		self.dropout_mask = dropout(tf.ones(
 			[batch, hidden], dtype=tf.float32), keep_prob=keep_prob, is_train=is_train)
 
 	def __call__(self, init, match, d, mask):
-		with tf.variable_scope(self.scope):
-			d_match = dropout(match, keep_prob=self.keep_prob,
-							  is_train=self.is_train)
-			inp, logits1 = pointer(d_match, init * self.dropout_mask, d, mask, "pr_pointer")
-			return inp
+		with tf.name_scope(self.name_scope):
+			with tf.variable_scope(self.scope):
+				d_match = dropout(match, keep_prob=self.keep_prob,
+								  is_train=self.is_train)
+				inp, logits1 = pointer(d_match, init * self.dropout_mask, d, mask, "pr_pointer")
+				return inp
 
 class ptr_net:
 	def __init__(self, batch, hidden, keep_prob=1.0, is_train=None, scope="ptr_net"):
