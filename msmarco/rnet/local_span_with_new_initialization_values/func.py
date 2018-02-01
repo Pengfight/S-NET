@@ -106,7 +106,7 @@ class native_gru:
 
 class ptr_net:
 	def __init__(self, batch, hidden, keep_prob=1.0, is_train=None, scope="ptr_net"):
-		self.gru = GRUCell(hidden,kernel_initializer=tf.contrib.layers.random_uniform())
+		self.gru = GRUCell(hidden,kernel_initializer=tf.initializers.random_uniform())
 		self.batch = batch
 		self.scope = scope
 		self.keep_prob = keep_prob
