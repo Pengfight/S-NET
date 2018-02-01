@@ -32,7 +32,7 @@ glove_file = os.path.join(path, "data", "glove", "glove.840B.300d.txt")
 target_dir = os.path.join(path, "preprocess", "rnet", "msmarco", "local_span")
 log_dir = os.path.join(path, "rnet", "msmarco", "local_span_with_var_summary", "log", "event")
 save_dir = os.path.join(path, "rnet", "msmarco", "local_span_with_var_summary", "log", "model")
-save_dir_temp = os.path.join(path, "rnet", "msmarco", "local_span", "log", "model")
+save_dir_temp = os.path.join(path, "rnet", "msmarco", "local_span_with_var_summary", "log", "model")
 answer_dir = os.path.join(path, "rnet", "msmarco", "local_span_with_var_summary", "log", "answer")
 
 train_record_file = os.path.join(target_dir, "train.tfrecords")
@@ -112,7 +112,7 @@ flags.DEFINE_integer("bucket_range", [250, 1000, 50], "the range of bucket")
 
 flags.DEFINE_integer("rouge_metric", 0, "# 0 = f, 1 = p, 2 = r")
 flags.DEFINE_integer("batch_size", 16, "Batch size") # 64
-flags.DEFINE_integer("num_steps", 50000, "Number of steps")
+flags.DEFINE_integer("num_steps", 150000, "Number of steps")
 flags.DEFINE_integer("checkpoint", 1000, "checkpoint to save and evaluate the model")
 flags.DEFINE_integer("max_checkpoint_to_keep", 10, "checkpoint to save and evaluate the model")
 flags.DEFINE_integer("period", 100, "period to save batch loss")

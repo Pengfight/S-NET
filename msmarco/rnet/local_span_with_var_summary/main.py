@@ -45,6 +45,8 @@ def train(config):
 
 	with tf.Session(config=sess_config) as sess:
 		writer = tf.summary.FileWriter(config.log_dir, graph=tf.get_default_graph())
+		writer.add_graph(sess.graph)
+		
 		sess.run(tf.global_variables_initializer())
 		saver = tf.train.Saver(max_to_keep=config.max_checkpoint_to_keep,
 			save_relative_paths=True)
