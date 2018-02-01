@@ -204,7 +204,7 @@ def dense(inputs, hidden, name_scope, use_bias=True, scope="dense"):
 			flat_inputs = tf.reshape(inputs, [-1, dim])
 			with tf.name_scope('weights'):
 				W = tf.get_variable("W", [dim, hidden],
-					initializer=tf.contrib.layers.random_uniform())
+					initializer=tf.initializers.random_uniform())
 				variable_summaries(W)
 			res = tf.matmul(flat_inputs, W)
 			if use_bias:
