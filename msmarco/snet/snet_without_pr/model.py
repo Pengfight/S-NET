@@ -225,16 +225,16 @@ class Model(object):
 					print("att:",att.get_shape().as_list())
 					print("att_vP:",att_vP.get_shape().as_list())
 		tf.summary.histogram('att_vP',att_vP)
-			#att_vP = tf.Print(att_vP,[tf.shape(att_vP)],message="att_vP:")
-			"""
-			with tf.variable_scope("match"):
-				self_att = dot_attention(
-					att, att, mask=self.c_mask, hidden=d,
-					keep_prob=config.keep_prob, is_train=self.is_train)
-				rnn = gru(num_layers=1, num_units=d, batch_size=N, input_size=self_att.get_shape(
-				).as_list()[-1], keep_prob=config.keep_prob, is_train=self.is_train)
-				match = rnn(self_att, seq_len=self.c_len)
-			"""
+		#att_vP = tf.Print(att_vP,[tf.shape(att_vP)],message="att_vP:")
+		"""
+		with tf.variable_scope("match"):
+			self_att = dot_attention(
+				att, att, mask=self.c_mask, hidden=d,
+				keep_prob=config.keep_prob, is_train=self.is_train)
+			rnn = gru(num_layers=1, num_units=d, batch_size=N, input_size=self_att.get_shape(
+			).as_list()[-1], keep_prob=config.keep_prob, is_train=self.is_train)
+			match = rnn(self_att, seq_len=self.c_len)
+		"""
 		with tf.variable_scope("pointer"):
 
 			# r_Q:
