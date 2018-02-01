@@ -85,7 +85,8 @@ class Model(object):
 					zip(capped_grads, variables), global_step=self.global_step)
 	def ready(self):
 		config = self.config
-		N, PL, QL, CL, d, dc, dg = config.batch_size, self.c_maxlen, self.q_maxlen, config.char_limit, config.hidden, config.char_dim, config.char_hidden
+		N, PL, QL, CL, d, dc, dg = config.batch_size, self.c_maxlen, self.q_maxlen, \
+			config.char_limit, config.hidden, config.char_dim, config.char_hidden
 		gru = cudnn_gru if config.use_cudnn else native_gru
 
 		gi = []
@@ -197,7 +198,8 @@ class Model(object):
 			if i==0:
 				with tf.variable_scope("attention"):
 					qc_att = dot_attention(c, q, mask=self.q_mask, hidden=d,
-						keep_prob=config.keep_prob, is_train=self.is_train, name_scope="attention_layer")
+						keep_prob=config.keep_prob, is_train=self.is_train,
+						name_scope="attention_layer")
 					rnn = gru(num_layers=1, num_units=d, batch_size=N, input_size=qc_att.get_shape(
 					).as_list()[-1], keep_prob=config.keep_prob, is_train=self.is_train)
 					att = rnn(qc_att, seq_len=self.c_len)
@@ -209,11 +211,11 @@ class Model(object):
 					#att = tf.Print(att,[att],message="att:")
 					print("att:",att.get_shape().as_list())
 					print("att_vP:",att_vP.get_shape().as_list())
-					tf.summary.histogram('vt_P',att)
 			else:
 				with tf.variable_scope("attention",reuse=True):
 					qc_att = dot_attention(c, q, mask=self.q_mask, hidden=d,
-						keep_prob=config.keep_prob, is_train=self.is_train, name_scope="attention_layer")
+						keep_prob=config.keep_prob, is_train=self.is_train,
+						name_scope="attention_layer")
 					rnn = gru(num_layers=1, num_units=d, batch_size=N, input_size=qc_att.get_shape(
 					).as_list()[-1], keep_prob=config.keep_prob, is_train=self.is_train)
 					att = rnn(qc_att, seq_len=self.c_len)
@@ -222,12 +224,13 @@ class Model(object):
 					#att = tf.Print(att,[att],message="att:")
 					print("att:",att.get_shape().as_list())
 					print("att_vP:",att_vP.get_shape().as_list())
-					tf.summary.histogram('vt_P',att)
+		tf.summary.histogram('att_vP',att_vP)
 			#att_vP = tf.Print(att_vP,[tf.shape(att_vP)],message="att_vP:")
 			"""
 			with tf.variable_scope("match"):
 				self_att = dot_attention(
-					att, att, mask=self.c_mask, hidden=d, keep_prob=config.keep_prob, is_train=self.is_train)
+					att, att, mask=self.c_mask, hidden=d,
+					keep_prob=config.keep_prob, is_train=self.is_train)
 				rnn = gru(num_layers=1, num_units=d, batch_size=N, input_size=self_att.get_shape(
 				).as_list()[-1], keep_prob=config.keep_prob, is_train=self.is_train)
 				match = rnn(self_att, seq_len=self.c_len)
@@ -267,26 +270,51 @@ class Model(object):
 			gi = None
 			for i in range(config.max_para):
 				# Passage ranking
-				with tf.variable_scope("passage-ranking-attention"):
+				if i==0:
+					with tf.variable_scope("passage-ranking-attention"):
 
-					#att_vP = tf.Print(att_vP,[att_vP.get_shape()],message="att_vP:")
-					vj_P = att_vP[:,i*400:(i+1)*400,:]
-					pr_att = pr_attention(batch=N, hidden=init.get_shape().as_list(
-						)[-1], keep_prob=config.keep_prob, is_train=self.is_train)
-					r_P = pr_att(init, vj_P, d, self.c_mask)
-					tf.summary.histogram('r_P',r_P)
-					#r_P = tf.Print(r_P,[r_P],message="r_p")
-					# Wg
-					concatenate = tf.concat([init,r_P],axis=1)
-					g = tf.nn.tanh(dense(concatenate, hidden=d, use_bias=False, scope="g"))
-					g_ = dense(g, 1, use_bias=False, scope="g_")
-					#g = tf.Print(g,[g],message="g")
-					if i==0:
-						gi = tf.reshape(g_,[N,1])
-					else:
-						gi = tf.concat([gi,tf.reshape(g_,[N,1])],axis=1)
+						#att_vP = tf.Print(att_vP,[att_vP.get_shape()],message="att_vP:")
+						vj_P = att_vP[:,i*400:(i+1)*400,:]
+						pr_att = pr_attention(batch=N, hidden=init.get_shape().as_list()[-1],
+							keep_prob=config.keep_prob, is_train=self.is_train,
+							name_scope="passage_ranking_att_layer")
+						r_P = pr_att(init, vj_P, d, self.c_mask)
+						tf.summary.histogram('r_P_'+str(i),r_P)
+						#r_P = tf.Print(r_P,[r_P],message="r_p")
+						# Wg
+						concatenate = tf.concat([init,r_P],axis=1)
+						g = tf.nn.tanh(dense(concatenate, hidden=d, use_bias=False, scope="g",
+							name_scope="dense_pr_att_layer_1"))
+						g_ = dense(g, 1, use_bias=False, scope="g_",
+							name_scope="dense_pr_att_layer_2")
+						#g = tf.Print(g,[g],message="g")
+						if i==0:
+							gi = tf.reshape(g_,[N,1])
+						else:
+							gi = tf.concat([gi,tf.reshape(g_,[N,1])],axis=1)
+				else:
+					with tf.variable_scope("passage-ranking-attention", reuse=True):
+						#att_vP = tf.Print(att_vP,[att_vP.get_shape()],message="att_vP:")
+						vj_P = att_vP[:,i*400:(i+1)*400,:]
+						pr_att = pr_attention(batch=N, hidden=init.get_shape().as_list()[-1],
+							keep_prob=config.keep_prob, is_train=self.is_train,
+							name_scope="passage_ranking_att_layer")
+						r_P = pr_att(init, vj_P, d, self.c_mask)
+						tf.summary.histogram('r_P_'+str(i),r_P)
+						#r_P = tf.Print(r_P,[r_P],message="r_p")
+						# Wg
 
-					tf.summary.histogram('gi',gi)
+						concatenate = tf.concat([init,r_P],axis=1)
+						g = tf.nn.tanh(dense(concatenate, hidden=d, use_bias=False, scope="g",
+							name_scope="dense_pr_att_layer_1"))
+						g_ = dense(g, 1, use_bias=False, scope="g_",
+							name_scope="dense_pr_att_layer_2")
+						#g = tf.Print(g,[g],message="g")
+						if i==0:
+							gi = tf.reshape(g_,[N,1])
+						else:
+							gi = tf.concat([gi,tf.reshape(g_,[N,1])],axis=1)
+			tf.summary.histogram('gi',gi)
 			#gi_ = tf.convert_to_tensor(gi,dtype=tf.float32)
 			#self.gi = tf.nn.softmax(gi_)
 			#self.losses3 = tf.nn.softmax_cross_entropy_with_logits(

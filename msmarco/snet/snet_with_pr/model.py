@@ -292,7 +292,6 @@ class Model(object):
 							gi = tf.reshape(g_,[N,1])
 						else:
 							gi = tf.concat([gi,tf.reshape(g_,[N,1])],axis=1)
-						tf.summary.histogram('gi_'+str(i),gi)
 				else:
 					with tf.variable_scope("passage-ranking-attention", reuse=True):
 						#att_vP = tf.Print(att_vP,[att_vP.get_shape()],message="att_vP:")
@@ -315,8 +314,7 @@ class Model(object):
 							gi = tf.reshape(g_,[N,1])
 						else:
 							gi = tf.concat([gi,tf.reshape(g_,[N,1])],axis=1)
-						tf.summary.histogram('gi_'+str(i),gi)
-
+			tf.summary.histogram('gi',gi)
 			#gi_ = tf.convert_to_tensor(gi,dtype=tf.float32)
 			#self.gi = tf.nn.softmax(gi_)
 			#self.losses3 = tf.nn.softmax_cross_entropy_with_logits(
