@@ -197,7 +197,7 @@ class Model(object):
 			if i==0:
 				with tf.variable_scope("attention"):
 					qc_att = dot_attention(c, q, mask=self.q_mask, hidden=d,
-										   keep_prob=config.keep_prob, is_train=self.is_train)
+						keep_prob=config.keep_prob, is_train=self.is_train, name_scope="attention_layer")
 					rnn = gru(num_layers=1, num_units=d, batch_size=N, input_size=qc_att.get_shape(
 					).as_list()[-1], keep_prob=config.keep_prob, is_train=self.is_train)
 					att = rnn(qc_att, seq_len=self.c_len)
@@ -209,21 +209,20 @@ class Model(object):
 					#att = tf.Print(att,[att],message="att:")
 					print("att:",att.get_shape().as_list())
 					print("att_vP:",att_vP.get_shape().as_list())
+					tf.summary.histogram('vt_P',att)
 			else:
 				with tf.variable_scope("attention",reuse=True):
 					qc_att = dot_attention(c, q, mask=self.q_mask, hidden=d,
-										   keep_prob=config.keep_prob, is_train=self.is_train)
+						keep_prob=config.keep_prob, is_train=self.is_train, name_scope="attention_layer")
 					rnn = gru(num_layers=1, num_units=d, batch_size=N, input_size=qc_att.get_shape(
 					).as_list()[-1], keep_prob=config.keep_prob, is_train=self.is_train)
 					att = rnn(qc_att, seq_len=self.c_len)
 					# att is the v_P
-					if i==0:
-						att_vP = att
-					else:
-						att_vP = tf.concat([att_vP, att], axis=1)
+					att_vP = tf.concat([att_vP, att], axis=1)
 					#att = tf.Print(att,[att],message="att:")
 					print("att:",att.get_shape().as_list())
 					print("att_vP:",att_vP.get_shape().as_list())
+					tf.summary.histogram('vt_P',att)
 			#att_vP = tf.Print(att_vP,[tf.shape(att_vP)],message="att_vP:")
 			"""
 			with tf.variable_scope("match"):
@@ -243,6 +242,8 @@ class Model(object):
 			)[-1], keep_prob=config.ptr_keep_prob, is_train=self.is_train)
 			logits1, logits2 = pointer(init, att_vP, d, self.c_pr_mask)
 			tf.summary.histogram('rQ_init',init)
+			tf.summary.histogram('pointer_logits_1',logits1)
+			tf.summary.histogram('pointer_logits_2',logits2)
 
 		with tf.variable_scope("predict"):
 			outer = tf.matmul(tf.expand_dims(tf.nn.softmax(logits1), axis=2),
@@ -301,6 +302,18 @@ class Model(object):
 			#self.loss= tf.Print(self.loss,[self.loss],message="ESP:")
 			#self.pr_loss = tf.Print(self.pr_loss,[self.pr_loss],message="PR:")
 			#self.e_loss = tf.Print(self.e_loss,[self.e_loss],message="EE:")
+	def variable_summaries(var):
+		"""Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
+		with tf.name_scope('summaries'):
+			mean = tf.reduce_mean(var)
+			tf.summary.scalar('mean', mean)
+			with tf.name_scope('stddev'):
+				stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
+			tf.summary.scalar('stddev', stddev)
+			tf.summary.scalar('max', tf.reduce_max(var))
+			tf.summary.scalar('min', tf.reduce_min(var))
+			tf.summary.histogram('histogram', var)
+
 	def print(self):
 		pass
 

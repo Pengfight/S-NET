@@ -111,7 +111,6 @@ class Model(object):
 			tf.summary.histogram('self_match',match)
 
 		with tf.variable_scope("pointer"):
-
 			# r_Q:
 			init = summ(q[:, :, -2 * d:], d, mask=self.q_mask,
 						keep_prob=config.ptr_keep_prob, is_train=self.is_train)

@@ -169,7 +169,7 @@ def summ(memory, hidden, mask, keep_prob=1.0, is_train=None, scope="summ"):
 
 def dot_attention(inputs, memory, mask, hidden, name_scope,
 				  keep_prob=1.0, is_train=None, scope="dot_attention"):
-	with tf.name_scope(scope):
+	with tf.name_scope(name_scope):
 		with tf.variable_scope(scope):
 
 			d_inputs = dropout(inputs, keep_prob=keep_prob, is_train=is_train)
