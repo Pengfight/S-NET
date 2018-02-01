@@ -134,6 +134,7 @@ def convert_tokens(eval_file, qa_id, pp1, pp2):
 			sys.exit()
 		"""
 		extracted_answer = passage_pr_concat[p1:p2]
+		print(extracted_answer)
 		extracted_answer_text = detokenizer.detokenize(extracted_answer, return_str=True)
 		answer_dict[str(qid)] = extracted_answer_text
 		remapped_dict[uuid] = extracted_answer_text
