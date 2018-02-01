@@ -56,7 +56,8 @@ class Model(object):
 			tf.cast(tf.cast(self.qh, tf.bool), tf.int32), axis=2), [-1])
 
 		self.ready()
-
+		self.merged = tf.summary.merge_all()
+		
 		if trainable:
 			self.lr = tf.get_variable(
 			"lr", shape=[], dtype=tf.float32, trainable=False)
@@ -236,7 +237,8 @@ class Model(object):
 			print("rQ:",init.get_shape().as_list())
 			pointer = ptr_net(batch=N, hidden=init.get_shape().as_list(
 			)[-1], keep_prob=config.ptr_keep_prob, is_train=self.is_train)
-			logits1, logits2 = pointer(init, att, d, self.c_mask)
+			logits1, logits2 = pointer(init, att_vP, d, self.c_mask)
+			tf.summary.histogram('rQ_init',init)
 
 		with tf.variable_scope("predict"):
 			outer = tf.matmul(tf.expand_dims(tf.nn.softmax(logits1), axis=2),
