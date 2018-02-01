@@ -49,10 +49,15 @@ def train(config):
 	lr = config.init_lr
 
 	with tf.Session(config=sess_config) as sess:
-		writer = tf.summary.FileWriter(config.log_dir)
+		writer = tf.summary.FileWriter(config.log_dir, graph=tf.get_default_graph())
+		writer.add_graph(sess.graph)
+
 		sess.run(tf.global_variables_initializer())
-		saver = tf.train.Saver()
+		saver = tf.train.Saver(max_to_keep=config.max_checkpoint_to_keep,
+			save_relative_paths=True)
 		#saver.restore(sess, tf.train.latest_checkpoint(config.save_dir))
+		if config.restore_checkpoint:
+			saver.restore(sess, tf.train.latest_checkpoint(config.save_dir_temp))
 		train_handle = sess.run(train_iterator.string_handle())
 		dev_handle = sess.run(dev_iterator.string_handle())
 		sess.run(tf.assign(model.is_train, tf.constant(True, dtype=tf.bool)))
@@ -65,10 +70,10 @@ def train(config):
 					[model.loss, model.pr_loss, model.e_loss, model.train_op_ee],
 					feed_dict={ handle: train_handle})
 			else:
-				loss_esp, train_op = sess.run([model.loss, model.train_op],
+				summary, loss_esp, train_op = sess.run([model.merged, model.loss, model.train_op],
 					feed_dict={ handle: train_handle})
 
-			if global_step % config.period == 0:
+			if global_step % config.period == 0 or global_step in [1,10,50,100,500]:
 				loss_sum1 = tf.Summary(value=[tf.Summary.Value(
 					tag="model/loss_esp", simple_value=loss_esp), ])
 				if config.with_passage_ranking:
@@ -79,6 +84,7 @@ def train(config):
 					writer.add_summary(loss_sum2, global_step)
 					writer.add_summary(loss_sum3, global_step)
 				writer.add_summary(loss_sum1, global_step)
+				writer.add_summary(summary, global_step)
 			if global_step % config.checkpoint == 0:
 				sess.run(tf.assign(model.is_train,
 								   tf.constant(False, dtype=tf.bool)))

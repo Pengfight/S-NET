@@ -112,8 +112,8 @@ class Model(object):
 					#qh_emb = tf.Print(qh_emb,[qh_emb],message="qh_emb")
 					qh_emb = dropout(
 						qh_emb, keep_prob=config.keep_prob, is_train=self.is_train)
-					cell_fw = tf.contrib.rnn.GRUCell(dg)
-					cell_bw = tf.contrib.rnn.GRUCell(dg)
+					cell_fw = tf.contrib.rnn.GRUCell(dg, reuse=True)
+					cell_bw = tf.contrib.rnn.GRUCell(dg, reuse=True)
 					_, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(
 						cell_fw, cell_bw, ch_emb, self.ch_len, dtype=tf.float32)
 					ch_emb = tf.concat([state_fw, state_bw], axis=1)
