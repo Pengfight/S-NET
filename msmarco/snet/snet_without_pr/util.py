@@ -110,16 +110,17 @@ def convert_tokens(eval_file, qa_id, pp1, pp2):
 		spans = eval_file[str(qid)]["spans"]
 		uuid = eval_file[str(qid)]["uuid"]
 		spans_l = len(spans)
-		print(p1,p2)
-		if p1 >= len(spans) or p2 >= len(spans):
-			#outlier = True
-			#p1 = p1%spans_l
-			#p2 = p1%spans_l
-			pass
-			#print("outlier")
-			#continue
-			# it will return {},{},True
-			#return answer_dict,remapped_dict,outlier
+		#print(p1,p2)
+
+		#if p1 >= len(spans) or p2 >= len(spans):
+		#	#outlier = True
+		#	#p1 = p1%spans_l
+		#	#p2 = p1%spans_l
+		#	pass
+		#	#print("outlier")
+		#	#continue
+		#	# it will return {},{},True
+		#	#return answer_dict,remapped_dict,outlier
 		#try:
 		#start_idx = spans[p1][0]
 		#end_idx = spans[p2][1]
