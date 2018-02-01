@@ -211,7 +211,6 @@ class Model(object):
 					#att = tf.Print(att,[att],message="att:")
 					print("att:",att.get_shape().as_list())
 					print("att_vP:",att_vP.get_shape().as_list())
-					tf.summary.histogram('vt_P',att)
 			else:
 				with tf.variable_scope("attention",reuse=True):
 					qc_att = dot_attention(c, q, mask=self.q_mask, hidden=d,
@@ -225,7 +224,7 @@ class Model(object):
 					#att = tf.Print(att,[att],message="att:")
 					print("att:",att.get_shape().as_list())
 					print("att_vP:",att_vP.get_shape().as_list())
-					tf.summary.histogram('vt_P',att)
+		tf.summary.histogram('att_vP',att_vP)
 			#att_vP = tf.Print(att_vP,[tf.shape(att_vP)],message="att_vP:")
 			"""
 			with tf.variable_scope("match"):
@@ -280,6 +279,7 @@ class Model(object):
 							keep_prob=config.keep_prob, is_train=self.is_train,
 							name_scope="passage_ranking_att_layer")
 						r_P = pr_att(init, vj_P, d, self.c_mask)
+						tf.summary.histogram('r_P_'+str(i),r_P)
 						#r_P = tf.Print(r_P,[r_P],message="r_p")
 						# Wg
 						concatenate = tf.concat([init,r_P],axis=1)
@@ -292,6 +292,7 @@ class Model(object):
 							gi = tf.reshape(g_,[N,1])
 						else:
 							gi = tf.concat([gi,tf.reshape(g_,[N,1])],axis=1)
+						tf.summary.histogram('gi_'+str(i),gi)
 				else:
 					with tf.variable_scope("passage-ranking-attention", reuse=True):
 						#att_vP = tf.Print(att_vP,[att_vP.get_shape()],message="att_vP:")
@@ -300,6 +301,7 @@ class Model(object):
 							keep_prob=config.keep_prob, is_train=self.is_train,
 							name_scope="passage_ranking_att_layer")
 						r_P = pr_att(init, vj_P, d, self.c_mask)
+						tf.summary.histogram('r_P_'+str(i),r_P)
 						#r_P = tf.Print(r_P,[r_P],message="r_p")
 						# Wg
 
@@ -313,6 +315,7 @@ class Model(object):
 							gi = tf.reshape(g_,[N,1])
 						else:
 							gi = tf.concat([gi,tf.reshape(g_,[N,1])],axis=1)
+						tf.summary.histogram('gi_'+str(i),gi)
 
 			#gi_ = tf.convert_to_tensor(gi,dtype=tf.float32)
 			#self.gi = tf.nn.softmax(gi_)
