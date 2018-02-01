@@ -70,22 +70,24 @@ def train(config):
 					[model.loss, model.pr_loss, model.e_loss, model.train_op_ee],
 					feed_dict={ handle: train_handle})
 			else:
-				summary, loss_esp, train_op = sess.run([model.merged, model.loss, model.train_op],
-					feed_dict={ handle: train_handle})
-
-			if global_step % config.period == 0:
-				loss_sum1 = tf.Summary(value=[tf.Summary.Value(
-					tag="model/loss_esp", simple_value=loss_esp), ])
-				if config.with_passage_ranking:
-					loss_sum2 = tf.Summary(value=[tf.Summary.Value(
-						tag="model/loss_pr", simple_value=loss_pr), ])
-					loss_sum3 = tf.Summary(value=[tf.Summary.Value(
-						tag="model/loss_ee", simple_value=loss_ee), ])
-					writer.add_summary(loss_sum2, global_step)
-					writer.add_summary(loss_sum3, global_step)
-				writer.add_summary(loss_sum1, global_step)
-				writer.add_summary(summary, global_step)
-			if global_step % config.checkpoint == 0 or global_step in [1,10,50,100,500] :
+				if global_step % config.period == 0:
+					summary, loss_esp, train_op = sess.run([model.merged, model.loss, model.train_op],
+						feed_dict={ handle: train_handle})
+					loss_sum1 = tf.Summary(value=[tf.Summary.Value(
+						tag="model/loss_esp", simple_value=loss_esp), ])
+					if config.with_passage_ranking:
+						loss_sum2 = tf.Summary(value=[tf.Summary.Value(
+							tag="model/loss_pr", simple_value=loss_pr), ])
+						loss_sum3 = tf.Summary(value=[tf.Summary.Value(
+							tag="model/loss_ee", simple_value=loss_ee), ])
+						writer.add_summary(loss_sum2, global_step)
+						writer.add_summary(loss_sum3, global_step)
+					writer.add_summary(loss_sum1, global_step)
+					writer.add_summary(summary, global_step)
+				else:
+					loss_esp, train_op = sess.run([model.loss, model.train_op],
+						feed_dict={ handle: train_handle})
+			if global_step % config.checkpoint == 0 or global_step in [1,10,50,100,500]:
 				sess.run(tf.assign(model.is_train,
 								   tf.constant(False, dtype=tf.bool)))
 				_, summ = evaluate_batch(
