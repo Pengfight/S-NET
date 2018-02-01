@@ -49,7 +49,7 @@ class Model(object):
 			self.c_pr = tf.slice(self.c_pr, [0, 0], [N, config.max_para*config.para_limit])
 			###
 			self.c_mask_temp = tf.cast(self.c_, tf.bool)
-			self.c_mask_temp = tf.Print(self.c_mask_temp,[self.c_mask_temp.get_shape().as_list()],message="c_mask_temp:")
+			self.c_mask_temp = tf.Print(self.c_mask_temp,[self.c_mask_temp.get_shape()],message="c_mask_temp:")
 			self.c_mask_multipara = tf.slice(self.c_mask_temp, [0, 0],
 				[N, config.max_para*config.para_limit])
 			###
