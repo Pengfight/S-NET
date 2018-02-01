@@ -84,7 +84,7 @@ flags.DEFINE_string("dev_meta", dev_meta, "Out file for dev meta")
 flags.DEFINE_string("test_meta", test_meta, "Out file for test meta")
 flags.DEFINE_string("answer_file", answer_file, "Out file for answer")
 
-flags.DEFINE_string("gpu_id", "3", "gpu id to use for training")
+flags.DEFINE_string("gpu_id", "2", "gpu id to use for training")
 
 flags.DEFINE_integer("glove_size", int(2.2e6), "Corpus size for Glove")
 flags.DEFINE_integer("glove_dim", 300, "Embedding dimension for Glove")
@@ -106,7 +106,7 @@ flags.DEFINE_boolean("use_cudnn", True, "Whether to use cudnn rnn (should be Fal
 flags.DEFINE_boolean("is_bucket", False, "build bucket batch iterator or not")
 flags.DEFINE_boolean("line_limit_prepro", False, "limit prepro to limited number of lines for POC")
 flags.DEFINE_boolean("restore_checkpoint", False, "Enable Passage Ranking part")
-flags.DEFINE_boolean("with_passage_ranking", False, "Enable Passage Ranking part")
+flags.DEFINE_boolean("with_passage_ranking", True, "Enable Passage Ranking part")
 flags.DEFINE_integer("bucket_range", [40, 401, 40], "the range of bucket")
 
 flags.DEFINE_integer("rouge_metric", 0, "# 0 = f, 1 = p, 2 = r")
