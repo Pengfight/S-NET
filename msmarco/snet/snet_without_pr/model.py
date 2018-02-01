@@ -270,7 +270,7 @@ class Model(object):
 					#r_P = tf.Print(r_P,[r_P],message="r_p")
 					# Wg
 					concatenate = tf.concat([init,r_P],axis=1)
-					g = tf.nn.tanh(dense(concatenate, hidden=d, use_bias=False, scope="g"+))
+					g = tf.nn.tanh(dense(concatenate, hidden=d, use_bias=False, scope="g"))
 					g_ = dense(g, 1, use_bias=False, scope="g_")
 					#g = tf.Print(g,[g],message="g")
 					if i==0:
