@@ -248,9 +248,9 @@ class Model(object):
 			self.yp1 = tf.argmax(tf.reduce_max(outer, axis=2), axis=1)
 			self.yp2 = tf.argmax(tf.reduce_max(outer, axis=1), axis=1)
 			losses = tf.nn.softmax_cross_entropy_with_logits(
-				logits=logits1, labels=self.y1)
+				logits=logits1, labels=self.y1_pr)
 			losses2 = tf.nn.softmax_cross_entropy_with_logits(
-				logits=logits2, labels=self.y2)
+				logits=logits2, labels=self.y2_pr)
 			#losses1_2 = tf.reduce_mean(losses1_2, axis=0)
 			self.loss = tf.reduce_mean(losses + losses2)
 
