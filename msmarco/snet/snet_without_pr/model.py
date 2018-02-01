@@ -7,7 +7,7 @@ class Model(object):
 		self.config = config
 		self.global_step = tf.get_variable('global_step', shape=[], dtype=tf.int32,
 										   initializer=tf.constant_initializer(0), trainable=False)
-		self.c_, self.q, self.ch, self.qh, self.y1, self.y2, self.qa_id, \
+		self.c, self.q, self.ch, self.qh, self.y1, self.y2, self.qa_id, \
 			self.c_pr, self.ch_pr, self.pr, self.y1_pr, self.y2_pr = batch.get_next()
 	
 		self.is_train = tf.get_variable(
@@ -17,7 +17,7 @@ class Model(object):
 		self.char_mat = tf.get_variable(
 			"char_mat", char_mat.shape, dtype=tf.float32)
 
-		self.c_mask = tf.cast(self.c_, tf.bool)
+		self.c_mask = tf.cast(self.c, tf.bool)
 		self.q_mask = tf.cast(self.q, tf.bool)
 		
 		# passage ranking line:
@@ -34,7 +34,7 @@ class Model(object):
 			self.c_maxlen = config.para_limit
 			###
 			self.q_maxlen = tf.reduce_max(self.q_len)
-			self.c = tf.slice(self.c_, [0, 0], [N, self.c_maxlen*config.max_para])
+			self.c = tf.slice(self.c, [0, 0], [N, self.c_maxlen*config.max_para])
 			self.q = tf.slice(self.q, [0, 0], [N, self.q_maxlen])
 			self.c_mask = tf.slice(self.c_mask, [0, 0], [N, self.c_maxlen])
 			self.q_mask = tf.slice(self.q_mask, [0, 0], [N, self.q_maxlen])
@@ -46,12 +46,9 @@ class Model(object):
 			# passage ranking
 			#print(self.ch_pr.get_shape())
 			#print(self.c_pr.get_shape())
-			self.c_pr = tf.slice(self.c_pr, [0, 0], [N, config.max_para*config.para_limit])
+			self.c_pr_mask = tf.cast(self.c_pr, tf.bool)
+			self.c_pr_mask = tf.slice(self.c_pr_mask, [0, 0], [N, config.max_para*config.para_limit])
 			###
-			self.c_mask_temp = tf.cast(self.c_, tf.bool)
-			self.c_ = tf.Print(self.c_,[self.c_.get_shape()],message="c_:")
-			self.c_mask_multipara = tf.slice(self.c_mask_temp, [0, 0],
-				[N, config.max_para*config.para_limit])
 			###
 			self.ch_pr = tf.slice(self.ch_pr, [0, 0, 0], [N, config.max_para*config.para_limit, CL])
 		else:
@@ -244,7 +241,7 @@ class Model(object):
 			print("rQ:",init.get_shape().as_list())
 			pointer = ptr_net(batch=N, hidden=init.get_shape().as_list(
 			)[-1], keep_prob=config.ptr_keep_prob, is_train=self.is_train)
-			logits1, logits2 = pointer(init, att_vP, d, self.c_mask_multipara)
+			logits1, logits2 = pointer(init, att_vP, d, self.c_pr_mask)
 			tf.summary.histogram('rQ_init',init)
 
 		with tf.variable_scope("predict"):
