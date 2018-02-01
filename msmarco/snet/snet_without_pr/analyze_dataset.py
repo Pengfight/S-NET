@@ -418,7 +418,8 @@ def process_file(config, max_para_count, filename, data_type, word_counter, char
 				   "passage_pr_chars": passage_pr_chars}
 		examples.append(example)
 		eval_examples[str(total)] = {
-			"passage_concat": passage_concat, "passage_pr_concat": passage_pr_single_token, "spans": spans, "answers": answer_texts, "uuid": source["query_id"],
+			"passage_concat": passage_concat, "passage_pr_concat": passage_pr_single_token,
+			"spans": spans, "answers": answer_texts, "uuid": source["query_id"],
 			"passage_rank": passage_rank}
 		line = fh.readline()
 		if total%1000 == 0:

@@ -2,8 +2,8 @@ import tensorflow as tf
 import re
 from collections import Counter
 import string
-from rouge_score import rouge_l_sentence_level as rouge_span
 import spacy
+from nltk.tokenize.moses import MosesDetokenizer
 
 nlp = spacy.blank("en")
 
@@ -101,6 +101,7 @@ def get_dataset(record_file, parser, config):
 
 
 def convert_tokens(eval_file, qa_id, pp1, pp2):
+	detokenizer = MosesDetokenizer()
 	answer_dict = {}
 	remapped_dict = {}
 	outlier = False
@@ -130,8 +131,10 @@ def convert_tokens(eval_file, qa_id, pp1, pp2):
 			import sys
 			sys.exit()
 		"""
-		answer_dict[str(qid)] = passage_pr_concat[start_idx: end_idx]
-		remapped_dict[uuid] = passage_pr_concat[start_idx: end_idx]
+		extracted_answer = passage_pr_concat[p1:p2]
+		extracted_answer_text = detokenizer.detokenize(extracted_answer, return_str=True)
+		answer_dict[str(qid)] = extracted_answer_text
+		remapped_dict[uuid] = extracted_answer_text
 	return answer_dict, remapped_dict, outlier
 
 def rouge_l(evaluated_ngrams, reference_ngrams):
