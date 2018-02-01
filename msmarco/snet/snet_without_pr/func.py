@@ -93,7 +93,7 @@ class native_gru:
 					inputs_bw = tf.reverse_sequence(
 						outputs[-1] * mask_bw, seq_lengths=seq_len, seq_dim=1, batch_dim=0)
 					out_bw, _ = tf.nn.dynamic_rnn(
-						gru_bw, inputs_bw, seq_len, initial_state=init_bw, dtype=tf.float32)
+						gru_fw, inputs_bw, seq_len, initial_state=init_bw, dtype=tf.float32)
 					out_bw = tf.reverse_sequence(
 						out_bw, seq_lengths=seq_len, seq_dim=1, batch_dim=0)
 				outputs.append(tf.concat([out_fw, out_bw], axis=2))
@@ -103,21 +103,6 @@ class native_gru:
 			res = outputs[-1]
 		return res
 
-class pr_attention:
-	def __init__(self, batch, hidden, keep_prob=1.0, is_train=None, scope="pr_attention"):
-		self.batch = batch
-		self.scope = scope
-		self.keep_prob = keep_prob
-		self.is_train = is_train
-		self.dropout_mask = dropout(tf.ones(
-			[batch, hidden], dtype=tf.float32), keep_prob=keep_prob, is_train=is_train)
-
-	def __call__(self, init, match, d, mask):
-		with tf.variable_scope(self.scope):
-			d_match = dropout(match, keep_prob=self.keep_prob,
-							  is_train=self.is_train)
-			inp, logits1 = pointer(d_match, init * self.dropout_mask, d, mask, "pr_pointer")
-			return inp
 
 class ptr_net:
 	def __init__(self, batch, hidden, keep_prob=1.0, is_train=None, scope="ptr_net"):
@@ -133,27 +118,13 @@ class ptr_net:
 		with tf.variable_scope(self.scope):
 			d_match = dropout(match, keep_prob=self.keep_prob,
 							  is_train=self.is_train)
-			inp, logits1 = pointer(d_match, init * self.dropout_mask, d, mask,
-				name_scope="ptr_net_start")
+			inp, logits1 = pointer(d_match, init * self.dropout_mask, d, mask, name_scope="ptr_net_start")
 			d_inp = dropout(inp, keep_prob=self.keep_prob,
 							is_train=self.is_train)
 			_, state = self.gru(d_inp, init)
 			tf.get_variable_scope().reuse_variables()
-			_, logits2 = pointer(d_match, state * self.dropout_mask, d, mask,
-				name_scope="ptr_net_end")
+			_, logits2 = pointer(d_match, state * self.dropout_mask, d, mask, name_scope="ptr_net_end")
 			return logits1, logits2
-
-def pointer(inputs, state, hidden, mask, scope="pointer", name_scope="pointer_layer"):
-	with tf.name_scope(name_scope):
-		with tf.variable_scope(scope):
-			u = tf.concat([tf.tile(tf.expand_dims(state, axis=1), [
-				1, tf.shape(inputs)[1], 1]), inputs], axis=2)
-			s0 = tf.nn.tanh(dense(u, hidden, use_bias=False, scope="s0", name_scope="s0_layer"))
-			s = dense(s0, 1, use_bias=False, scope="s", name_scope="s_layer")
-			s1 = softmax_mask(tf.squeeze(s, [2]), mask)
-			a = tf.expand_dims(tf.nn.softmax(s1), axis=2)
-			res = tf.reduce_sum(a * inputs, axis=1)
-			return res, s1
 
 def dropout(args, keep_prob, is_train, mode="recurrent"):
 	if keep_prob < 1.0:
@@ -169,24 +140,53 @@ def dropout(args, keep_prob, is_train, mode="recurrent"):
 			args, keep_prob, noise_shape=noise_shape) * scale, lambda: args)
 	return args
 
-
 def softmax_mask(val, mask):
 	return -INF * (1 - tf.cast(mask, tf.float32)) + val
+
+class pr_attention:
+	def __init__(self, batch, hidden, keep_prob=1.0, is_train=None, scope="pr_attention"):
+		self.batch = batch
+		self.scope = scope
+		self.keep_prob = keep_prob
+		self.is_train = is_train
+		self.dropout_mask = dropout(tf.ones(
+			[batch, hidden], dtype=tf.float32), keep_prob=keep_prob, is_train=is_train)
+
+	def __call__(self, init, match, d, mask):
+		with tf.variable_scope(self.scope):
+			d_match = dropout(match, keep_prob=self.keep_prob,
+							  is_train=self.is_train)
+			inp, logits1 = pointer(d_match, init * self.dropout_mask, d, mask, 
+				scope="pr_pointer", name_scope="pr_pointer_layer")
+			return inp
+
+def pointer(inputs, state, hidden, mask, scope="pointer", name_scope="pointer_layer"):
+	with tf.name_scope(name_scope):
+		with tf.variable_scope(scope):
+			u = tf.concat([tf.tile(tf.expand_dims(state, axis=1), [
+				1, tf.shape(inputs)[1], 1]), inputs], axis=2)
+			s0 = tf.nn.tanh(dense(u, hidden, use_bias=False, scope="s0", name_scope="s0_layer"))
+			s = dense(s0, 1, use_bias=False, scope="s", name_scope="s_layer")
+			s1 = softmax_mask(tf.squeeze(s, [2]), mask)
+			a = tf.expand_dims(tf.nn.softmax(s1), axis=2)
+			res = tf.reduce_sum(a * inputs, axis=1)
+			return res, s1
 
 
 def summ(memory, hidden, mask, keep_prob=1.0, is_train=None, scope="summ"):
 	with tf.variable_scope(scope):
 		d_memory = dropout(memory, keep_prob=keep_prob, is_train=is_train)
 		s0 = tf.nn.tanh(dense(d_memory, hidden, scope="s0", name_scope="summ_layer_s0"))
-		s = dense(s0, 1, use_bias=False, scope="s", name_scope="summ_layer_s0")
+		s = dense(s0, 1, use_bias=False, scope="s", name_scope="summ_layer_s")
 		s1 = softmax_mask(tf.squeeze(s, [2]), mask)
 		a = tf.expand_dims(tf.nn.softmax(s1), axis=2)
 		res = tf.reduce_sum(a * memory, axis=1)
 		return res
 
 
-def dot_attention(inputs, memory, mask, hidden, name_scope, keep_prob=1.0, is_train=None, scope="dot_attention"):
-	with tf.name_scope(scope):	
+def dot_attention(inputs, memory, mask, hidden, name_scope,
+				  keep_prob=1.0, is_train=None, scope="dot_attention"):
+	with tf.name_scope(name_scope):
 		with tf.variable_scope(scope):
 
 			d_inputs = dropout(inputs, keep_prob=keep_prob, is_train=is_train)
@@ -201,7 +201,6 @@ def dot_attention(inputs, memory, mask, hidden, name_scope, keep_prob=1.0, is_tr
 				outputs = tf.matmul(inputs_, tf.transpose(
 					memory_, [0, 2, 1])) / (hidden ** 0.5)
 				mask = tf.tile(tf.expand_dims(mask, axis=1), [1, JX, 1])
-				# logits = attention 'a'
 				logits = tf.nn.softmax(softmax_mask(outputs, mask))
 				outputs = tf.matmul(logits, memory)
 				res = tf.concat([inputs, outputs], axis=2)
@@ -212,7 +211,7 @@ def dot_attention(inputs, memory, mask, hidden, name_scope, keep_prob=1.0, is_tr
 				gate = tf.nn.sigmoid(dense(d_res, dim, use_bias=False, name_scope="gate_layer"))
 				return res * gate
 
-def dense(inputs, hidden, name_scope="dense", use_bias=True, scope="dense"):
+def dense(inputs, hidden, name_scope, use_bias=True, scope="dense"):
 	with tf.name_scope(name_scope):
 		with tf.variable_scope(scope):
 			shape = tf.shape(inputs)
@@ -220,7 +219,9 @@ def dense(inputs, hidden, name_scope="dense", use_bias=True, scope="dense"):
 			out_shape = [shape[idx] for idx in range(
 				len(inputs.get_shape().as_list()) - 1)] + [hidden]
 			flat_inputs = tf.reshape(inputs, [-1, dim])
-			W = tf.get_variable("W", [dim, hidden])
+			with tf.name_scope('weights'):
+				W = tf.get_variable("W", [dim, hidden])
+				variable_summaries(W)
 			res = tf.matmul(flat_inputs, W)
 			if use_bias:
 				b = tf.get_variable(
@@ -228,3 +229,15 @@ def dense(inputs, hidden, name_scope="dense", use_bias=True, scope="dense"):
 				res = tf.nn.bias_add(res, b)
 			res = tf.reshape(res, out_shape)
 			return res
+
+def variable_summaries(var):
+	"""Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
+	with tf.name_scope('summaries'):
+		mean = tf.reduce_mean(var)
+		tf.summary.scalar('mean', mean)
+		with tf.name_scope('stddev'):
+			stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
+		tf.summary.scalar('stddev', stddev)
+		tf.summary.scalar('max', tf.reduce_max(var))
+		tf.summary.scalar('min', tf.reduce_min(var))
+		tf.summary.histogram('histogram', var)

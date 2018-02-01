@@ -100,7 +100,7 @@ def get_dataset(record_file, parser, config):
 	return dataset
 
 
-def convert_tokens(eval_file, qa_id, pp1, pp2):
+def convert_tokens(config, eval_file, qa_id, pp1, pp2):
 	detokenizer = MosesDetokenizer()
 	answer_dict = {}
 	remapped_dict = {}
@@ -110,15 +110,20 @@ def convert_tokens(eval_file, qa_id, pp1, pp2):
 		spans = eval_file[str(qid)]["spans"]
 		uuid = eval_file[str(qid)]["uuid"]
 		spans_l = len(spans)
-		print(p1,p2)
-		if p1 >= len(spans) or p2 >= len(spans):
-			#outlier = True
-			#p1 = p1%spans_l
-			#p2 = p1%spans_l
-			print("outlier")
-			#continue
-			# it will return {},{},True
-			#return answer_dict,remapped_dict,outlier
+		passage_pr_concat_ = []
+		for i in passage_pr_concat:
+			passage_pr_concat_ += i
+		#print(p1,p2)
+
+		#if p1 >= len(spans) or p2 >= len(spans):
+		#	#outlier = True
+		#	#p1 = p1%spans_l
+		#	#p2 = p1%spans_l
+		#	pass
+		#	#print("outlier")
+		#	#continue
+		#	# it will return {},{},True
+		#	#return answer_dict,remapped_dict,outlier
 		#try:
 		#start_idx = spans[p1][0]
 		#end_idx = spans[p2][1]
@@ -131,7 +136,9 @@ def convert_tokens(eval_file, qa_id, pp1, pp2):
 			import sys
 			sys.exit()
 		"""
-		extracted_answer = passage_pr_concat[p1:p2]
+		
+		extracted_answer = passage_pr_concat_[p1:p2]
+		print(extracted_answer)
 		extracted_answer_text = detokenizer.detokenize(extracted_answer, return_str=True)
 		answer_dict[str(qid)] = extracted_answer_text
 		remapped_dict[uuid] = extracted_answer_text

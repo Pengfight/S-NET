@@ -95,8 +95,7 @@ def train(config):
 					loss_esp, train_op = sess.run([model.loss, model.train_op],
 						feed_dict={ handle: train_handle})
 			if global_step % config.checkpoint == 0 or global_step in [1,10,50,100,500]:
-				sess.run(tf.assign(model.is_train,
-								   tf.constant(False, dtype=tf.bool)))
+				sess.run(tf.assign(model.is_train, tf.constant(False, dtype=tf.bool)))
 				_, summ = evaluate_batch(
 					model, config.val_num_batches, train_eval_file, sess, "train", handle,
 					train_handle, config)
@@ -105,8 +104,7 @@ def train(config):
 				metrics, summ = evaluate_batch(
 					model, dev_total // config.batch_size + 1, dev_eval_file, sess, "dev", handle,
 					dev_handle, config)
-				sess.run(tf.assign(model.is_train,
-								   tf.constant(True, dtype=tf.bool)))
+				sess.run(tf.assign(model.is_train, tf.constant(True, dtype=tf.bool)))
 
 				dev_loss = metrics["loss_ee"]
 				if dev_loss < loss_save:

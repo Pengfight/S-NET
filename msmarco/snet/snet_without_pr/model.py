@@ -274,6 +274,7 @@ class Model(object):
 					pr_att = pr_attention(batch=N, hidden=init.get_shape().as_list(
 						)[-1], keep_prob=config.keep_prob, is_train=self.is_train)
 					r_P = pr_att(init, vj_P, d, self.c_mask)
+					tf.summary.histogram('r_P',r_P)
 					#r_P = tf.Print(r_P,[r_P],message="r_p")
 					# Wg
 					concatenate = tf.concat([init,r_P],axis=1)
@@ -284,6 +285,8 @@ class Model(object):
 						gi = tf.reshape(g_,[N,1])
 					else:
 						gi = tf.concat([gi,tf.reshape(g_,[N,1])],axis=1)
+
+					tf.summary.histogram('gi',gi)
 			#gi_ = tf.convert_to_tensor(gi,dtype=tf.float32)
 			#self.gi = tf.nn.softmax(gi_)
 			#self.losses3 = tf.nn.softmax_cross_entropy_with_logits(

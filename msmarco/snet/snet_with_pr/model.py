@@ -198,7 +198,8 @@ class Model(object):
 			if i==0:
 				with tf.variable_scope("attention"):
 					qc_att = dot_attention(c, q, mask=self.q_mask, hidden=d,
-						keep_prob=config.keep_prob, is_train=self.is_train, name_scope="attention_layer")
+						keep_prob=config.keep_prob, is_train=self.is_train,
+						name_scope="attention_layer")
 					rnn = gru(num_layers=1, num_units=d, batch_size=N, input_size=qc_att.get_shape(
 					).as_list()[-1], keep_prob=config.keep_prob, is_train=self.is_train)
 					att = rnn(qc_att, seq_len=self.c_len)
@@ -214,7 +215,8 @@ class Model(object):
 			else:
 				with tf.variable_scope("attention",reuse=True):
 					qc_att = dot_attention(c, q, mask=self.q_mask, hidden=d,
-						keep_prob=config.keep_prob, is_train=self.is_train, name_scope="attention_layer")
+						keep_prob=config.keep_prob, is_train=self.is_train,
+						name_scope="attention_layer")
 					rnn = gru(num_layers=1, num_units=d, batch_size=N, input_size=qc_att.get_shape(
 					).as_list()[-1], keep_prob=config.keep_prob, is_train=self.is_train)
 					att = rnn(qc_att, seq_len=self.c_len)
@@ -228,7 +230,8 @@ class Model(object):
 			"""
 			with tf.variable_scope("match"):
 				self_att = dot_attention(
-					att, att, mask=self.c_mask, hidden=d, keep_prob=config.keep_prob, is_train=self.is_train)
+					att, att, mask=self.c_mask, hidden=d,
+					keep_prob=config.keep_prob, is_train=self.is_train)
 				rnn = gru(num_layers=1, num_units=d, batch_size=N, input_size=self_att.get_shape(
 				).as_list()[-1], keep_prob=config.keep_prob, is_train=self.is_train)
 				match = rnn(self_att, seq_len=self.c_len)
@@ -280,8 +283,10 @@ class Model(object):
 						#r_P = tf.Print(r_P,[r_P],message="r_p")
 						# Wg
 						concatenate = tf.concat([init,r_P],axis=1)
-						g = tf.nn.tanh(dense(concatenate, hidden=d, use_bias=False, scope="g"))
-						g_ = dense(g, 1, use_bias=False, scope="g_")
+						g = tf.nn.tanh(dense(concatenate, hidden=d, use_bias=False, scope="g",
+							name_scope="dense_pr_att_layer_1"))
+						g_ = dense(g, 1, use_bias=False, scope="g_",
+							name_scope="dense_pr_att_layer_2")
 						#g = tf.Print(g,[g],message="g")
 						if i==0:
 							gi = tf.reshape(g_,[N,1])
@@ -297,14 +302,18 @@ class Model(object):
 						r_P = pr_att(init, vj_P, d, self.c_mask)
 						#r_P = tf.Print(r_P,[r_P],message="r_p")
 						# Wg
+
 						concatenate = tf.concat([init,r_P],axis=1)
-						g = tf.nn.tanh(dense(concatenate, hidden=d, use_bias=False, scope="g"))
-						g_ = dense(g, 1, use_bias=False, scope="g_")
+						g = tf.nn.tanh(dense(concatenate, hidden=d, use_bias=False, scope="g",
+							name_scope="dense_pr_att_layer_1"))
+						g_ = dense(g, 1, use_bias=False, scope="g_",
+							name_scope="dense_pr_att_layer_2")
 						#g = tf.Print(g,[g],message="g")
 						if i==0:
 							gi = tf.reshape(g_,[N,1])
 						else:
 							gi = tf.concat([gi,tf.reshape(g_,[N,1])],axis=1)
+
 			#gi_ = tf.convert_to_tensor(gi,dtype=tf.float32)
 			#self.gi = tf.nn.softmax(gi_)
 			#self.losses3 = tf.nn.softmax_cross_entropy_with_logits(
