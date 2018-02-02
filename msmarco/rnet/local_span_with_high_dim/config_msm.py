@@ -111,7 +111,7 @@ flags.DEFINE_boolean("visualize_matplot", False, "Save concatenated para length 
 flags.DEFINE_integer("bucket_range", [250, 1000, 50], "the range of bucket")
 
 flags.DEFINE_integer("rouge_metric", 0, "# 0 = f, 1 = p, 2 = r")
-flags.DEFINE_integer("batch_size", 16, "Batch size") # 64
+flags.DEFINE_integer("batch_size", 8, "Batch size") # 64
 flags.DEFINE_integer("num_steps", 150000, "Number of steps")
 flags.DEFINE_integer("checkpoint", 1000, "checkpoint to save and evaluate the model")
 flags.DEFINE_integer("max_checkpoint_to_keep", 10, "checkpoint to save and evaluate the model")

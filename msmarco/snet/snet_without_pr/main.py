@@ -67,7 +67,8 @@ def train(config):
 			global_step = sess.run(model.global_step) + 1
 			if config.with_passage_ranking:
 				if global_step % config.period == 0:					
-					summary, loss_esp, train_op = sess.run([model.merged, model.loss, model.train_op],
+					summary, loss_esp, loss_pr, loss_ee, train_op_ee = sess.run(
+						[model.loss, model.pr_loss, model.e_loss, model.train_op_ee],
 						feed_dict={ handle: train_handle})
 					loss_sum1 = tf.Summary(value=[tf.Summary.Value(
 						tag="model/loss_esp", simple_value=loss_esp), ])
